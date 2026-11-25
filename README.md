@@ -1,78 +1,124 @@
-# Oxbridge Health Engineering Challenge: Prior Authorization API
+# Oxbridge Health — Prior Authorization API
 
-Before a patient can have certain procedures, their doctor's office must ask the health plan for approval. This is called a **prior authorization**.
+Backend service for submitting, reviewing, deciding, and auditing prior authorization requests, built with **FastAPI**, **SQLAlchemy 2.0**, **Alembic**, **PostgreSQL**, and **real signed JWTs (PyJWT)**.
 
-Imagine you've just joined our team. Our Utilization Management (UM) team needs a new prior authorization service, and you're building the backend API. Below is a note from your tech lead, followed by the UM team's requirements in their own words.
-
----
-
-## Note from your tech lead
-
-- **Stack:** Python and PostgreSQL. Framework and libraries are your call.
-- **AI tools:** Use AI coding tools; we do.
-- **Identity:** our identity service issues each caller a token containing their user ID and role. Fake it however you like. You don't need sign-up or login.
-- **Data:** seed data for members, providers, reviewers, coverage and patient–practice links is fine. You don't need screens or endpoints to manage it.
-- We'll be living with this code for years, and the UM team changes its mind often. Write it the way you'd want to find it.
-- These requirements came straight from the business. If something is unclear or seems to contradict something else, make a call and write it down, as you would on the job.
+The codebase follows **Functional Core, Imperative Shell (FCIS)** and **KISS**:
+- **Functional Core (`app/domain/`)**: Pure functions + immutable frozen dataclasses with zero I/O or system-clock calls. Every business rule is unit-tested in milliseconds.
+- **Imperative Shell (`app/repos/`, `app/services/`)**: Plain functions orchestrating explicit PostgreSQL transactions, `FOR UPDATE SKIP LOCKED` queue claiming, and atomic writes to the append-only audit ledger.
+- **Persona-Separated API (`app/api/`)**: Dedicated routers and response DTOs per role (`provider`, `member`, `reviewer`, `admin`) so each roadmap evolves independently and adding new roles (like `auditor`) is purely additive.
 
 ---
 
-## Requirements from the Utilization Management team
+## How to Run It
 
-### Who uses it
-- **Members:** our patients.
-- **Provider offices:** doctors' offices submitting requests for their patients.
-- **Reviewers:** our nurses and physicians who decide requests.
-- **Operations admins:** they keep the work moving.
+### 1. Single-command startup (Docker Compose)
+```bash
+docker compose up --build
+```
+On startup, the API container automatically:
+1. Waits for PostgreSQL 16 to pass its health check.
+2. Runs Alembic migrations (`alembic upgrade head`), including DB `CHECK` constraints and the append-only `audit_events` trigger.
+3. Applies idempotent synthetic seed data (`python -m app.db.seed`).
+4. Starts the API at `http://localhost:8000`.
 
-Each of these groups has its own roadmap. Their needs change independently, often on different teams, and we'll be adding new groups (auditors are next).
+### 2. Explore Interactive Swagger / OpenAPI Docs
+- **Swagger UI:** `http://localhost:8000/docs`
+- **ReDoc:** `http://localhost:8000/redoc`
+- **OpenAPI JSON:** `http://localhost:8000/openapi.json`
+- **Health Check:** `http://localhost:8000/health`
 
-### Submitting a request
-- Offices submit requests for their patients, but only for patients linked to their practice.
-- A request covers one or more procedures (CPT or HCPCS codes, each with a number of units), a diagnosis (ICD-10), and the planned date of service. Offices can attach a clinical note.
-- We don't accept requests for procedures that have already happened; those go through retro review, which isn't part of this project. We also don't accept requests more than a year out.
-- The patient must have active coverage on the date of service.
-- Our provider offices are nationwide, from Maine to Hawaii.
-- More than 30 units for a single procedure is almost always a typo.
-- Offices complain constantly that when we reject a submission, they can't tell why. Tell them exactly what to fix.
+#### Trying Endpoints in Swagger (Development Mode)
+In development (`ENV=development`), a dev helper router is mounted so you can mint real HS256 JWTs for any seeded user without building login screens:
+1. Call `GET /api/v1/dev/users` to see the seeded accounts.
+2. Call `POST /api/v1/dev/tokens` with e.g. `{"user_id": "user-prov-maine"}`.
+3. Click **Authorize** in Swagger UI and paste the returned `access_token`.
 
-### Reviewing a request
-- Reviewers pick up new requests from the queue. Once a reviewer picks one up, it's theirs until they decide it or an admin hands it to someone else.
-- Some of our physicians also see patients. A reviewer must never review a request for a patient they treat.
-- Reviewers approve or deny each procedure individually, and any denial needs a reason. They submit their decision for the whole request at once.
-- Decisions are final. Appeals are a separate process and not part of this project.
+Or print tokens for all seeded accounts from the CLI:
+```bash
+uv run python -m scripts.mint_token
+```
 
-### Who sees what
-- Members can see their requests and whether each procedure was approved. Clinical notes and reviewer reasoning are internal, and members must never see them.
-- Offices see the requests they submitted.
-- Admins see everything.
+#### Seeded Synthetic Scenarios
+| User ID | Role | Practice / Notes |
+|---|---|---|
+| `user-prov-maine` | `provider_office` | `prac-maine` (`America/New_York`) — linked to `mem-alice` (active) and `mem-carol` (terminated coverage) |
+| `user-prov-hawaii` | `provider_office` | `prac-hawaii` (`Pacific/Honolulu`) — linked to `mem-bob` (active) |
+| `user-mem-alice` | `member` | `mem-alice` — treated by `user-rev-dr-smith` (conflict-of-interest scenario) |
+| `user-mem-bob` | `member` | `mem-bob` — active open-ended coverage |
+| `user-mem-carol` | `member` | `mem-carol` — terminated coverage (triggers `COVERAGE_INACTIVE`) |
+| `user-rev-nurse` | `reviewer` | Jordan Lee, RN — no patient conflicts |
+| `user-rev-dr-smith` | `reviewer` | Dr. Morgan Smith, MD — treats `mem-alice` (blocked from claiming/reviewing Alice's requests) |
+| `user-admin-1` | `admin` | Full visibility, reassignment, audit trail, workload summary, support desk lookup |
 
-### Compliance
-- We're audited regularly. For any request, we must be able to show every step: who did what, and when.
-- Last year an audit found a request marked "approved" with no record of who approved it. That cannot happen again.
-- We're a HIPAA-covered entity.
-
-### Support
-- When an office calls to say "my submission didn't go through," our support desk needs to find out what happened.
-
-### Partners
-- Several large provider groups will connect their own systems directly to this service. Their IT teams will build from our documentation alone.
-
-### Wishlist (only if you have time)
-- Offices would love to be notified when a decision is made.
-- Team leads want to see how many open requests each reviewer has.
+### 3. Running Tests & Linting Locally
+```bash
+uv sync --extra dev
+uv run pytest -v
+uv run ruff check app tests scripts
+```
+By default, integration tests run against an isolated in-memory SQLite database with foreign keys enabled for fast feedback. To run the full integration suite directly against PostgreSQL:
+```bash
+TEST_DATABASE_URL=postgresql+psycopg://prior_auth:prior_auth@localhost:5432/prior_auth uv run pytest -v
+```
 
 ---
 
-## What to submit
+## API Overview
 
-Create your own copy of this repo (**Use this template → Private**), build your solution there using synthetic data only, and add `rgavrilov5` as a collaborator when you're done.
+| Persona | Endpoints |
+|---|---|
+| **Provider Office** | `POST /api/v1/provider/requests` (supports `Idempotency-Key`), `GET /api/v1/provider/requests`, `GET /api/v1/provider/requests/{id}`, `GET /api/v1/provider/notifications` |
+| **Member** | `GET /api/v1/member/requests`, `GET /api/v1/member/requests/{id}` *(clinical notes & denial reasons structurally excluded)* |
+| **Reviewer** | `GET /api/v1/reviewer/queue`, `POST /api/v1/reviewer/queue/claim-next`, `POST /api/v1/reviewer/requests/{id}/claim`, `GET /api/v1/reviewer/requests`, `GET /api/v1/reviewer/requests/{id}`, `POST /api/v1/reviewer/requests/{id}/decision` |
+| **Operations Admin** | `GET /api/v1/admin/requests`, `GET /api/v1/admin/requests/{id}` (includes full audit trail), `POST /api/v1/admin/requests/{id}/reassign`, `GET /api/v1/admin/reviewers/workload`, `GET /api/v1/admin/support/submissions` |
 
-Your README should include:
-- **How to run it.** Ideally a single `docker compose up`.
-- **Decisions and assumptions.** In particular, anything in the requirements you found unclear or contradictory, and what you decided.
-- **How you used AI.** What you asked it to do, where it got things wrong, and what you changed.
+---
 
-## What happens next
+## Decisions and Assumptions
 
-If your submission moves forward, we'll schedule a 45-minute session where you walk us through your code and make a small change to it live. Please be ready to explain any line in the repo.
+1. **Nationwide Offices (Maine to Hawaii) & Date-of-Service Window**
+   - *Ambiguity:* "procedures that have already happened" and "more than a year out" depend on what calendar date "today" is. Using UTC would reject legitimate same-day requests from Hawaii (`UTC-10`) after 2:00 PM local time.
+   - *Decision:* Each practice stores an IANA timezone (`America/New_York`, `Pacific/Honolulu`, etc.). `date_of_service` is compared against the practice's local calendar date (`practice_local_today`). One year out uses calendar-year addition with Feb 29 clamped to Feb 28.
+
+2. **"More than 30 units is almost always a typo"**
+   - *Ambiguity:* "Almost always" implies legitimate high-unit procedures exist, so a hard rejection at 30 would block valid clinical requests.
+   - *Decision:* Soft-block by default (`422 HIGH_UNITS_CONFIRMATION_REQUIRED`) telling the office which procedure exceeded 30 units and how to confirm if intentional (`confirm_high_units: true`), alongside a hard ceiling of 999 units.
+
+3. **Clinical Notes & Reviewer Reasoning Visibility (Member vs. Provider Office)**
+   - *Decision:* Members see their requests and per-procedure approval outcomes (`pending` / `approved` / `denied`), and **never** see `clinical_note` or `denial_reason`. Those fields do not exist on `MemberRequestView` / `MemberProcedureView`, making accidental serialization impossible. Provider offices see their own submitted `clinical_note` and procedure `denial_reason` so they understand why a procedure was denied.
+
+4. **Preventing Unlinked Patient / Coverage Enumeration (HIPAA Minimum Necessary)**
+   - *Decision:* If a provider office submits for a member ID that does not exist or is not linked to their practice, we return `PATIENT_NOT_LINKED` and skip coverage evaluation so callers cannot probe coverage dates for patients outside their practice.
+
+5. **Conflict of Interest (COI) for Physician-Reviewers**
+   - *Decision:* Enforced in every reviewer and admin touchpoint: `GET /reviewer/queue` and `POST /reviewer/queue/claim-next` automatically exclude patients the reviewer treats, `POST /reviewer/requests/{id}/claim` returns `403 CONFLICT_OF_INTEREST`, and `POST /admin/requests/{id}/reassign` refuses to assign a request to a treating physician (`409`). Decision submission also re-checks COI as defense-in-depth.
+
+6. **Concurrency & Atomic Per-Procedure Decisions**
+   - *Decision:* Queue pickup uses PostgreSQL `SELECT ... FOR UPDATE SKIP LOCKED` so concurrent reviewers never claim the same request. Reviewers submit decisions for every procedure in one atomic request; the overall status is derived purely from procedure outcomes (`approved`, `partially_approved`, or `denied`). Once decided, the request is immutable at both the application layer and PostgreSQL trigger level (`trg_prior_auth_final_immutable`).
+
+7. **Compliance Audit Guarantee ("Never approved with no record of who approved it")**
+   - *Decision:* Enforced at **three** layers:
+     1. Every state transition (`submitted`, `claimed`, `reassigned`, `decided`) inserts an `audit_events` row inside the **same database transaction**.
+     2. PostgreSQL enforces a `CHECK` constraint requiring `decided_by IS NOT NULL AND decided_at IS NOT NULL` for any final status, and a `CHECK` constraint requiring non-empty `denial_reason` on any denied procedure.
+     3. PostgreSQL triggers make `audit_events` strictly append-only (`BEFORE UPDATE OR DELETE`) and block any mutation of finalized `prior_auth_requests` rows.
+
+8. **HIPAA & Support Desk Traceability Without PHI Leakage**
+   - *Decision:* Every HTTP request carries an `X-Request-ID` correlation header (echoed in headers and error bodies), and all `/api/*` responses include `Cache-Control: no-store`, `Pragma: no-cache`, and `X-Content-Type-Options: nosniff` so proxies/browsers never cache PHI. Structured logs use an explicit non-PHI allowlist (`request_id`, `actor_id`, `practice_id`, `prior_auth_id`, `error_codes`, timings). Both domain-level and schema-level (`422`) submission rejections are written to the PHI-free `submission_attempts` table queryable via `GET /api/v1/admin/support/submissions`.
+
+9. **Partner Integrations & Independent Persona Roadmaps (Adding `auditor` Next)**
+   - *Decision:* All validation errors (both Pydantic schema errors and domain rules) share a single `ErrorResponse` envelope returning **all** detected issues at once. `POST /api/v1/provider/requests` supports an `Idempotency-Key` header per practice so partner retries never create duplicate authorizations. Provider offices are scoped by `practice_id` so multiple intake staff in the same office see their practice's requests. Because each persona has its own router and DTOs, adding an `auditor` role next is purely additive (`UserRole.AUDITOR` + new read-only `app/api/auditor.py` router) without touching existing personas.
+
+10. **Wishlist Items Included**
+    - **Office Decision Notifications:** Implemented via a transactional outbox table (`notifications`) written atomically when a decision is made, exposed via `GET /api/v1/provider/notifications`.
+    - **Reviewer Workload:** Implemented via `GET /api/v1/admin/reviewers/workload` showing open (`in_review`) counts per reviewer.
+
+---
+
+## How AI Was Used
+
+- **What I directed AI to do:** We first aligned on architecture (Functional Core / Imperative Shell, KISS, SQLAlchemy 2.0 strictly confined to `db/` and `repos/`, real HS256 JWTs, role-isolated FastAPI routers with Swagger docs, and no custom UI). AI then scaffolded the project, Alembic migration, pure domain rules, repositories, services, persona routers, and unit/integration tests step by step.
+- **Issues caught and fixed during build/testing:**
+  1. **Frozen `Exception` dataclass bug:** AI initially annotated `DomainError(Exception)` with `@dataclass(frozen=True)`. Integration tests immediately failed with `FrozenInstanceError: cannot assign to field '__traceback__'` when FastAPI propagated `DomainError` through its `yield` DB session dependency. We converted `DomainError` to a standard `Exception` subclass while keeping all value objects frozen.
+  2. **Seed FK flush ordering:** In `app/db/seed.py`, calling `session.merge()` for all tables before a single `session.commit()` caused SQLAlchemy's unit-of-work to flush `clinician_patients` before parent rows in `users`/`members`, triggering a foreign-key `IntegrityError`. Adding explicit `session.flush()` boundaries between parent and child seed batches resolved it cleanly.
+  3. **Ruff lint configuration for FastAPI:** FastAPI's idiomatic `Depends()`/`Query()`/`Header()` defaults tripped `B008`; we configured `extend-immutable-calls` in `pyproject.toml` and modernized `timezone.utc` to `datetime.UTC`.
+  4. **Alembic logging config on Docker startup:** Running `docker compose up` caught a missing `qualname` entry in `alembic.ini` for `logger_sqlalchemy` and `logger_alembic`; we added both and re-verified clean startup against PostgreSQL 16.
