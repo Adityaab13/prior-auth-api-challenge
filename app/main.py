@@ -6,8 +6,10 @@ import logging
 import time
 import uuid
 from collections.abc import Awaitable, Callable
+from pathlib import Path
 
 from fastapi import Depends, FastAPI, Request, Response
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 from sqlalchemy import text
 from sqlalchemy.orm import Session
@@ -145,6 +147,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(admin.router)
     if cfg.is_dev:
         app.include_router(dev.router)
+        explorer_html = Path(__file__).resolve().parent / "static" / "index.html"
+
+        @app.get("/", include_in_schema=False)
+        def dev_explorer() -> FileResponse:
+            return FileResponse(explorer_html, media_type="text/html")
 
     @app.get("/health", response_model=HealthResponse, tags=["Health"], summary="Health check")
     def health(session: Session = Depends(get_db_session)) -> HealthResponse:

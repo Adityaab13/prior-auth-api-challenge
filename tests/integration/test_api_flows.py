@@ -14,6 +14,10 @@ def _future_service_date(days: int = 30) -> str:
 
 
 def test_swagger_docs_and_openapi_schema_are_available(client: TestClient) -> None:
+    explorer = client.get("/")
+    assert explorer.status_code == 200
+    assert "Oxbridge Health — Prior Authorization Explorer" in explorer.text
+
     assert client.get("/docs").status_code == 200
     assert client.get("/redoc").status_code == 200
 

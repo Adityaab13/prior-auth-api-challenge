@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Oxbridge Health — Prior Authorization Explorer</title>
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --surface: #ffffff;
+      --border: #e2e8f0;
+      --text: #0f172a;
+      --muted: #64748b;
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --green-bg: #dcfce7;
+      --green-text: #166534;
+      --red-bg: #fee2e2;
+      --red-text: #991b1b;
+      --amber-bg: #fef3c7;
+      --amber-text: #92400e;
+      --blue-bg: #dbeafe;
+      --blue-text: #1e40af;
+      --purple-bg: #f3e8ff;
+      --purple-text: #6b21a8;
+      --radius: 10px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.45;
+    }
+    header {
+      background: #0f172a;
+      color: #fff;
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    header h1 { font-size: 18px; margin: 0; font-weight: 600; letter-spacing: -0.01em; }
+    header .sub { font-size: 12px; color: #94a3b8; }
+    header .links { display: flex; gap: 10px; align-items: center; }
+    header a {
+      color: #cbd5e1;
+      text-decoration: none;
+      font-size: 13px;
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: 1px solid #334155;
+    }
+    header a:hover { background: #1e293b; color: #fff; }
+
+    .container { max-width: 1220px; margin: 0 auto; padding: 20px 24px 80px; }
+
+    .persona-bar {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 16px;
+      margin-bottom: 18px;
+    }
+    .persona-bar-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .persona-bar-top strong { font-size: 13px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
+    .active-banner { font-size: 13px; color: var(--muted); }
+    .active-banner code { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; color: var(--text); }
+    .persona-buttons { display: flex; flex-wrap: wrap; gap: 8px; }
+    .persona-btn {
+      border: 1px solid var(--border);
+      background: #f8fafc;
+      color: var(--text);
+      padding: 7px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.12s ease;
+    }
+    .persona-btn:hover { border-color: var(--primary); background: #eff6ff; }
+    .persona-btn.active {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #fff;
+      font-weight: 600;
+    }
+    .role-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+    .dot-provider_office { background: #2563eb; }
+    .dot-reviewer { background: #7c3aed; }
+    .dot-member { background: #16a34a; }
+    .dot-admin { background: #ea580c; }
+    .persona-btn.active .role-dot { background: #fff; }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+    @media (max-width: 920px) { .grid-2 { grid-template-columns: 1fr; } }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+      margin-bottom: 18px;
+    }
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+    .card h2 { margin: 0; font-size: 16px; }
+    .card h3 { margin: 0 0 8px; font-size: 14px; }
+    .hint { font-size: 12.5px; color: var(--muted); margin: 0 0 12px; }
+
+    label { display: block; font-size: 12.5px; font-weight: 600; color: #334155; margin-bottom: 4px; }
+    input[type="text"], input[type="date"], input[type="number"], select, textarea {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid #cbd5e1;
+      border-radius: 7px;
+      font-size: 13.5px;
+      font-family: inherit;
+      background: #fff;
+    }
+    textarea { min-height: 68px; resize: vertical; }
+    .field-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 10px; }
+    .proc-row {
+      display: grid;
+      grid-template-columns: 95px 1fr 85px 135px 34px;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    @media (max-width: 640px) { .proc-row { grid-template-columns: 1fr 1fr; } }
+    .checkbox-inline { display: flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 500; margin: 0; cursor: pointer; }
+
+    button.btn {
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 7px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    button.btn:hover { background: var(--primary-hover); }
+    button.btn-secondary {
+      background: #f1f5f9;
+      color: var(--text);
+      border: 1px solid #cbd5e1;
+    }
+    button.btn-secondary:hover { background: #e2e8f0; }
+    button.btn-danger { background: #dc2626; }
+    button.btn-danger:hover { background: #b91c1c; }
+    button.btn-sm { padding: 5px 10px; font-size: 12px; }
+    .btn-group { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 11.5px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+    }
+    .badge-submitted { background: var(--blue-bg); color: var(--blue-text); }
+    .badge-in_review { background: var(--purple-bg); color: var(--purple-text); }
+    .badge-approved { background: var(--green-bg); color: var(--green-text); }
+    .badge-partially_approved { background: var(--amber-bg); color: var(--amber-text); }
+    .badge-denied { background: var(--red-bg); color: var(--red-text); }
+    .badge-pending { background: #f1f5f9; color: #475569; }
+
+    .alert {
+      border-radius: 8px;
+      padding: 12px 14px;
+      margin-bottom: 14px;
+      font-size: 13px;
+    }
+    .alert-error { background: var(--red-bg); color: var(--red-text); border: 1px solid #fecaca; }
+    .alert-success { background: var(--green-bg); color: var(--green-text); border: 1px solid #bbf7d0; }
+    .alert-info { background: var(--blue-bg); color: var(--blue-text); border: 1px solid #bfdbfe; }
+    .alert ul { margin: 6px 0 0; padding-left: 18px; }
+
+    .req-item {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 14px;
+      margin-bottom: 10px;
+      background: #fcfdff;
+    }
+    .req-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 6px;
+    }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; }
+    .meta-line { font-size: 12.5px; color: var(--muted); margin-bottom: 8px; }
+    .proc-list { list-style: none; padding: 0; margin: 6px 0 0; }
+    .proc-list li {
+      padding: 6px 8px;
+      border-top: 1px solid #f1f5f9;
+      font-size: 13px;
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .workload-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+    .workload-card {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 14px;
+      background: #f8fafc;
+    }
+    .workload-num { font-size: 26px; font-weight: 700; color: var(--primary); }
+
+    pre.json-box {
+      background: #0f172a;
+      color: #e2e8f0;
+      padding: 12px;
+      border-radius: 8px;
+      overflow-x: auto;
+      font-size: 12px;
+      max-height: 280px;
+      margin: 8px 0 0;
+    }
+
+    .inspector {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: #0f172a;
+      color: #e2e8f0;
+      border-top: 1px solid #334155;
+      z-index: 40;
+    }
+    .inspector-bar {
+      max-width: 1220px;
+      margin: 0 auto;
+      padding: 8px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      font-size: 12.5px;
+      cursor: pointer;
+    }
+    .inspector-body {
+      max-width: 1220px;
+      margin: 0 auto;
+      padding: 0 24px 14px;
+      display: none;
+    }
+    .inspector.open .inspector-body { display: block; }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>Oxbridge Health — Prior Authorization Explorer</h1>
+      <div class="sub">Interactive dev console wired directly to the real JWT-authenticated REST API</div>
+    </div>
+    <div class="links">
+      <a href="/docs" target="_blank">Swagger UI (/docs)</a>
+      <a href="/redoc" target="_blank">ReDoc (/redoc)</a>
+      <a href="/openapi.json" target="_blank">OpenAPI JSON</a>
+    </div>
+  </header>
+
+  <div class="container">
+    <!-- One-click Persona / JWT Switcher -->
+    <section class="persona-bar">
+      <div class="persona-bar-top">
+        <strong>1. Switch Persona (mints a real signed HS256 JWT)</strong>
+        <div id="active-user-banner" class="active-banner">Loading seeded accounts...</div>
+      </div>
+      <div id="persona-buttons" class="persona-buttons"></div>
+    </section>
+
+    <!-- Global feedback banner -->
+    <div id="feedback-area"></div>
+
+    <!-- PROVIDER OFFICE VIEW -->
+    <section id="view-provider_office" class="hidden">
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header">
+            <h2>Submit Prior Authorization</h2>
+          </div>
+          <p class="hint">Quick-fill presets for testing every validation rule:</p>
+          <div class="btn-group" style="margin-bottom: 12px;">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="fillPreset('alice-valid')">Valid Alice (Maine)</button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="fillPreset('carol-invalid')">Invalid Carol (3 errors)</button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="fillPreset('high-units')">High Units &gt;30 Typo</button>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="fillPreset('bob-valid')">Valid Bob (Hawaii)</button>
+          </div>
+
+          <form id="submit-form" onsubmit="handleSubmitRequest(event)">
+            <div class="field-row">
+              <div>
+                <label for="f-member">Member ID</label>
+                <input id="f-member" type="text" value="mem-alice" required />
+              </div>
+              <div>
+                <label for="f-dx">Diagnosis (ICD-10)</label>
+                <input id="f-dx" type="text" value="M54.50" required />
+              </div>
+              <div>
+                <label for="f-dos">Date of Service</label>
+                <input id="f-dos" type="date" required />
+              </div>
+            </div>
+
+            <label>Procedures (CPT / HCPCS)</label>
+            <div id="proc-rows"></div>
+            <button type="button" class="btn btn-secondary btn-sm" style="margin-bottom: 12px;" onclick="addProcRow()">+ Add Procedure</button>
+
+            <div class="field-row">
+              <div>
+                <label for="f-idem">Idempotency-Key (optional)</label>
+                <input id="f-idem" type="text" placeholder="e.g. demo-retry-001" />
+              </div>
+            </div>
+
+            <div style="margin-bottom: 12px;">
+              <label for="f-note">Clinical Note (internal — never shown to members)</label>
+              <textarea id="f-note">Patient reports 8 weeks of persistent lumbar radiculopathy.</textarea>
+            </div>
+
+            <button type="submit" class="btn">Submit Prior Authorization</button>
+          </form>
+        </div>
+
+        <div>
+          <div class="card">
+            <div class="card-header">
+              <h2>My Practice's Requests</h2>
+              <button class="btn btn-secondary btn-sm" onclick="loadProviderData()">Refresh</button>
+            </div>
+            <div id="provider-requests-list"><p class="hint">No requests yet.</p></div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h2>Decision Notifications (Outbox)</h2>
+            </div>
+            <div id="provider-notifications-list"><p class="hint">No notifications yet.</p></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- REVIEWER VIEW -->
+    <section id="view-reviewer" class="hidden">
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header">
+            <h2>Eligible Review Queue</h2>
+            <div class="btn-group">
+              <button class="btn btn-sm" onclick="claimNextFromQueue()">Claim Next (SKIP LOCKED)</button>
+              <button class="btn btn-secondary btn-sm" onclick="loadReviewerData()">Refresh</button>
+            </div>
+          </div>
+          <p class="hint">Patients you treat (conflict of interest) are automatically excluded from your queue.</p>
+          <div id="reviewer-queue-list"><p class="hint">Queue is empty.</p></div>
+
+          <hr style="border: 0; border-top: 1px solid var(--border); margin: 14px 0;" />
+          <h3>Test Direct Claim by Request ID (e.g., COI Demo)</h3>
+          <div style="display: flex; gap: 8px;">
+            <input id="direct-claim-id" type="text" placeholder="Paste any request UUID to test direct claim / COI" />
+            <button class="btn btn-secondary" onclick="claimSpecificById()">Claim ID</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h2>My Assigned Requests</h2>
+            <button class="btn btn-secondary btn-sm" onclick="loadReviewerData()">Refresh</button>
+          </div>
+          <div id="reviewer-assigned-list"><p class="hint">No assigned requests yet.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- MEMBER VIEW -->
+    <section id="view-member" class="hidden">
+      <div class="card">
+        <div class="card-header">
+          <h2>My Prior Authorization Requests</h2>
+          <button class="btn btn-secondary btn-sm" onclick="loadMemberData()">Refresh</button>
+        </div>
+        <div class="alert alert-info">
+          <strong>HIPAA Privacy Boundary:</strong> Member endpoints structurally omit <code>clinical_note</code> and <code>denial_reason</code>. Toggle "Raw JSON" on any request below to verify.
+        </div>
+        <div id="member-requests-list"><p class="hint">No prior authorization requests found.</p></div>
+      </div>
+    </section>
+
+    <!-- ADMIN VIEW -->
+    <section id="view-admin" class="hidden">
+      <div class="card">
+        <div class="card-header">
+          <h2>Reviewer Open Workload</h2>
+          <button class="btn btn-secondary btn-sm" onclick="loadAdminData()">Refresh All</button>
+        </div>
+        <div id="admin-workload" class="workload-grid"></div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-header">
+            <h2>All Requests &amp; Audit Trail</h2>
+          </div>
+          <div id="admin-requests-list"><p class="hint">No requests in system yet.</p></div>
+        </div>
+
+        <div>
+          <div class="card">
+            <div class="card-header">
+              <h2>Selected Request Audit Trail</h2>
+            </div>
+            <div id="admin-audit-detail"><p class="hint">Click "View Audit Trail" on any request to inspect its immutable compliance timeline.</p></div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h2>Support Desk Lookup (PHI-Free)</h2>
+            </div>
+            <p class="hint">Trace "my submission didn't go through" calls by <code>X-Request-ID</code> or list recent attempts.</p>
+            <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+              <input id="support-req-id" type="text" placeholder="Filter by X-Request-ID (optional)" />
+              <button class="btn btn-sm" onclick="loadSupportAttempts()">Search</button>
+            </div>
+            <div id="admin-support-list"><p class="hint">No submission attempts yet.</p></div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Live API Inspector Footer -->
+  <div id="inspector" class="inspector">
+    <div class="inspector-bar" onclick="toggleInspector()">
+      <span id="inspector-summary" class="mono">Last API Call: ready</span>
+      <span style="color: #94a3b8;">Click to expand / collapse raw response</span>
+    </div>
+    <div class="inspector-body">
+      <pre id="inspector-json" class="json-box">{}</pre>
+    </div>
+  </div>
+
+  <script>
+    const state = {
+      users: [],
+      reviewers: [],
+      activeUser: null,
+      token: null,
+      lastRequestId: null,
+    };
+
+    function futureDate(days) {
+      const d = new Date();
+      d.setDate(d.getDate() + days);
+      return d.toISOString().slice(0, 10);
+    }
+
+    function escapeHtml(str) {
+      return String(str ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    function toggleInspector() {
+      document.getElementById("inspector").classList.toggle("open");
+    }
+
+    function showFeedback(type, title, bodyHtml) {
+      const area = document.getElementById("feedback-area");
+      area.innerHTML = `<div class="alert alert-${type}"><strong>${escapeHtml(title)}</strong>${bodyHtml ? `<div style="margin-top:4px">${bodyHtml}</div>` : ""}</div>`;
+    }
+
+    function clearFeedback() {
+      document.getElementById("feedback-area").innerHTML = "";
+    }
+
+    async function apiFetch(method, path, { body = null, headers = {}, auth = true } = {}) {
+      const reqHeaders = { ...headers };
+      if (auth && state.token) {
+        reqHeaders["Authorization"] = `Bearer ${state.token}`;
+      }
+      if (body !== null) {
+        reqHeaders["Content-Type"] = "application/json";
+      }
+      const res = await fetch(path, {
+        method,
+        headers: reqHeaders,
+        body: body !== null ? JSON.stringify(body) : undefined,
+      });
+      const reqId = res.headers.get("X-Request-ID") || "-";
+      state.lastRequestId = reqId;
+      let data = null;
+      try {
+        data = await res.json();
+      } catch {
+        data = null;
+      }
+
+      document.getElementById("inspector-summary").textContent =
+        `${method} ${path}  →  ${res.status}  |  X-Request-ID: ${reqId}`;
+      document.getElementById("inspector-json").textContent = JSON.stringify(data, null, 2);
+
+      return { ok: res.ok, status: res.status, reqId, data, headers: res.headers };
+    }
+
+    function renderApiError(res) {
+      const d = res.data || {};
+      const errs = Array.isArray(d.errors) && d.errors.length
+        ? `<ul>${d.errors.map(e => `<li><code>${escapeHtml(e.field)}</code> — <strong>${escapeHtml(e.code)}</strong>: ${escapeHtml(e.message)}</li>`).join("")}</ul>`
+        : "";
+      const copyBtn = `<button class="btn btn-secondary btn-sm" style="margin-left:8px" onclick="navigator.clipboard.writeText('${escapeHtml(res.reqId)}')">Copy X-Request-ID</button>`;
+      showFeedback(
+        "error",
+        `${res.status} ${d.code || "ERROR"}: ${d.message || "Request failed"}`,
+        `<div class="mono">X-Request-ID: ${escapeHtml(res.reqId)} ${copyBtn}</div>${errs}`
+      );
+    }
+
+    async function init() {
+      document.getElementById("f-dos").value = futureDate(21);
+      addProcRow("CPT", "72148", 1, false);
+      addProcRow("CPT", "97110", 12, false);
+
+      const res = await apiFetch("GET", "/api/v1/dev/users", { auth: false });
+      if (!res.ok) {
+        showFeedback("error", "Could not load seeded dev users", "Make sure ENV=development is active.");
+        return;
+      }
+      state.users = res.data;
+      state.reviewers = res.data.filter(u => u.role === "reviewer");
+      renderPersonaButtons();
+      if (state.users.length) {
+        const defaultUser = state.users.find(u => u.user_id === "user-prov-maine") || state.users[0];
+        await selectPersona(defaultUser.user_id);
+      }
+    }
+
+    function renderPersonaButtons() {
+      const box = document.getElementById("persona-buttons");
+      box.innerHTML = state.users.map(u => `
+        <button class="persona-btn ${state.activeUser?.user_id === u.user_id ? "active" : ""}"
+                onclick="selectPersona('${escapeHtml(u.user_id)}')">
+          <span class="role-dot dot-${escapeHtml(u.role)}"></span>
+          <span>${escapeHtml(u.display_name)}</span>
+          <span style="opacity:0.7;font-size:11px">(${escapeHtml(u.role)})</span>
+        </button>
+      `).join("");
+    }
+
+    async function selectPersona(userId) {
+      clearFeedback();
+      const res = await apiFetch("POST", "/api/v1/dev/tokens", {
+        body: { user_id: userId },
+        auth: false,
+      });
+      if (!res.ok) {
+        renderApiError(res);
+        return;
+      }
+      state.token = res.data.access_token;
+      state.activeUser = state.users.find(u => u.user_id === userId);
+      renderPersonaButtons();
+
+      const u = state.activeUser;
+      document.getElementById("active-user-banner").innerHTML =
+        `Active: <code>${escapeHtml(u.user_id)}</code> · Role: <code>${escapeHtml(u.role)}</code>` +
+        (u.practice_id ? ` · Practice: <code>${escapeHtml(u.practice_id)}</code>` : "");
+
+      for (const role of ["provider_office", "reviewer", "member", "admin"]) {
+        document.getElementById(`view-${role}`).classList.toggle("hidden", u.role !== role);
+      }
+
+      if (u.role === "provider_office") {
+        if (u.practice_id === "prac-hawaii") fillPreset("bob-valid");
+        else fillPreset("alice-valid");
+        await loadProviderData();
+      } else if (u.role === "reviewer") {
+        await loadReviewerData();
+      } else if (u.role === "member") {
+        await loadMemberData();
+      } else if (u.role === "admin") {
+        await loadAdminData();
+      }
+    }
+
+    // ---------- PROVIDER OFFICE ----------
+    function addProcRow(codeType = "CPT", code = "", units = 1, confirmHigh = false) {
+      const container = document.getElementById("proc-rows");
+      const row = document.createElement("div");
+      row.className = "proc-row";
+      row.innerHTML = `
+        <select class="p-type">
+          <option value="CPT" ${codeType === "CPT" ? "selected" : ""}>CPT</option>
+          <option value="HCPCS" ${codeType === "HCPCS" ? "selected" : ""}>HCPCS</option>
+        </select>
+        <input class="p-code" type="text" placeholder="72148" value="${escapeHtml(code)}" required />
+        <input class="p-units" type="number" value="${units}" required />
+        <label class="checkbox-inline"><input class="p-confirm" type="checkbox" ${confirmHigh ? "checked" : ""} /> confirm &gt;30</label>
+        <button type="button" class="btn btn-secondary btn-sm" onclick="this.parentElement.remove()">×</button>
+      `;
+      container.appendChild(row);
+    }
+
+    function fillPreset(name) {
+      const procBox = document.getElementById("proc-rows");
+      procBox.innerHTML = "";
+      document.getElementById("f-idem").value = "";
+      if (name === "alice-valid") {
+        document.getElementById("f-member").value = "mem-alice";
+        document.getElementById("f-dx").value = "M54.50";
+        document.getElementById("f-dos").value = futureDate(21);
+        document.getElementById("f-note").value = "Patient reports 8 weeks of lumbar radiculopathy.";
+        addProcRow("CPT", "72148", 1, false);
+        addProcRow("CPT", "97110", 12, false);
+      } else if (name === "carol-invalid") {
+        document.getElementById("f-member").value = "mem-carol";
+        document.getElementById("f-dx").value = "BAD-CODE";
+        document.getElementById("f-dos").value = futureDate(15);
+        document.getElementById("f-note").value = "Triggers terminated coverage + invalid ICD-10 + >30 units.";
+        addProcRow("CPT", "97110", 45, false);
+      } else if (name === "high-units") {
+        document.getElementById("f-member").value = "mem-alice";
+        document.getElementById("f-dx").value = "M54.50";
+        document.getElementById("f-dos").value = futureDate(14);
+        document.getElementById("f-note").value = "Testing >30 units typo confirmation.";
+        addProcRow("CPT", "97110", 45, false);
+      } else if (name === "bob-valid") {
+        document.getElementById("f-member").value = "mem-bob";
+        document.getElementById("f-dx").value = "E11.9";
+        document.getElementById("f-dos").value = futureDate(10);
+        document.getElementById("f-note").value = "Infusion therapy requested by Hawaii clinic.";
+        addProcRow("HCPCS", "J1745", 40, true);
+      }
+    }
+
+    async function handleSubmitRequest(event) {
+      event.preventDefault();
+      clearFeedback();
+      const procedures = [...document.querySelectorAll("#proc-rows .proc-row")].map(row => ({
+        code_type: row.querySelector(".p-type").value,
+        code: row.querySelector(".p-code").value,
+        units: Number(row.querySelector(".p-units").value),
+        confirm_high_units: row.querySelector(".p-confirm").checked,
+      }));
+      const payload = {
+        member_id: document.getElementById("f-member").value.trim(),
+        diagnosis_code: document.getElementById("f-dx").value.trim(),
+        date_of_service: document.getElementById("f-dos").value,
+        procedures,
+        clinical_note: document.getElementById("f-note").value || null,
+      };
+      const headers = {};
+      const idem = document.getElementById("f-idem").value.trim();
+      if (idem) headers["Idempotency-Key"] = idem;
+
+      const res = await apiFetch("POST", "/api/v1/provider/requests", { body: payload, headers });
+      if (!res.ok) {
+        renderApiError(res);
+        return;
+      }
+      const replayed = res.headers.get("Idempotency-Replayed") === "true";
+      showFeedback(
+        "success",
+        replayed ? "Idempotent Replay (200 OK)" : "Prior Authorization Submitted (201 Created)",
+        `Request ID: <code class="mono">${escapeHtml(res.data.id)}</code> · X-Request-ID: <code class="mono">${escapeHtml(res.reqId)}</code>`
+      );
+      await loadProviderData();
+    }
+
+    async function loadProviderData() {
+      const [reqs, notes] = await Promise.all([
+        apiFetch("GET", "/api/v1/provider/requests"),
+        apiFetch("GET", "/api/v1/provider/notifications"),
+      ]);
+      const reqEl = document.getElementById("provider-requests-list");
+      if (!reqs.ok || !reqs.data.length) {
+        reqEl.innerHTML = `<p class="hint">No requests submitted by this practice yet.</p>`;
+      } else {
+        reqEl.innerHTML = reqs.data.map(r => `
+          <div class="req-item">
+            <div class="req-top">
+              <span class="mono">${escapeHtml(r.id)}</span>
+              <span class="badge badge-${escapeHtml(r.status)}">${escapeHtml(r.status)}</span>
+            </div>
+            <div class="meta-line">Member: <strong>${escapeHtml(r.member_id)}</strong> · Dx: ${escapeHtml(r.diagnosis_code)} · DOS: ${escapeHtml(r.date_of_service)}</div>
+            ${r.clinical_note ? `<div class="meta-line">Note: ${escapeHtml(r.clinical_note)}</div>` : ""}
+            <ul class="proc-list">
+              ${r.procedures.map(p => `
+                <li>
+                  <span><strong>${escapeHtml(p.code_type)} ${escapeHtml(p.code)}</strong> × ${p.units}</span>
+                  <span>
+                    <span class="badge badge-${escapeHtml(p.decision)}">${escapeHtml(p.decision)}</span>
+                    ${p.denial_reason ? `<span style="color:var(--red-text);margin-left:6px">${escapeHtml(p.denial_reason)}</span>` : ""}
+                  </span>
+                </li>
+              `).join("")}
+            </ul>
+          </div>
+        `).join("");
+      }
+
+      const noteEl = document.getElementById("provider-notifications-list");
+      if (!notes.ok || !notes.data.length) {
+        noteEl.innerHTML = `<p class="hint">No decision notifications yet. Decide a request as a Reviewer to trigger one.</p>`;
+      } else {
+        noteEl.innerHTML = notes.data.map(n => `
+          <div class="req-item">
+            <div class="req-top">
+              <strong>${escapeHtml(n.event_type)}</strong>
+              <span class="badge badge-${escapeHtml(n.payload?.status || "pending")}">${escapeHtml(n.payload?.status || n.status)}</span>
+            </div>
+            <div class="meta-line mono">Request: ${escapeHtml(n.request_id)} · Approved: ${n.payload?.approved_count ?? 0}, Denied: ${n.payload?.denied_count ?? 0}</div>
+          </div>
+        `).join("");
+      }
+    }
+
+    // ---------- REVIEWER ----------
+    async function loadReviewerData() {
+      const [queue, assigned] = await Promise.all([
+        apiFetch("GET", "/api/v1/reviewer/queue"),
+        apiFetch("GET", "/api/v1/reviewer/requests"),
+      ]);
+
+      const qEl = document.getElementById("reviewer-queue-list");
+      if (!queue.ok || !queue.data.length) {
+        qEl.innerHTML = `<p class="hint">No eligible unassigned requests in queue.</p>`;
+      } else {
+        qEl.innerHTML = queue.data.map(item => `
+          <div class="req-item">
+            <div class="req-top">
+              <span class="mono">${escapeHtml(item.id)}</span>
+              <button class="btn btn-sm" onclick="claimSpecific('${escapeHtml(item.id)}')">Claim</button>
+            </div>
+            <div class="meta-line">Practice: ${escapeHtml(item.practice_id)} · DOS: ${escapeHtml(item.date_of_service)} · Procedures: ${item.procedure_count}</div>
+          </div>
+        `).join("");
+      }
+
+      const aEl = document.getElementById("reviewer-assigned-list");
+      if (!assigned.ok || !assigned.data.length) {
+        aEl.innerHTML = `<p class="hint">You have no assigned requests. Claim one from the queue.</p>`;
+      } else {
+        aEl.innerHTML = assigned.data.map(r => {
+          const isOpen = r.status === "in_review";
+          return `
+            <div class="req-item">
+              <div class="req-top">
+                <span class="mono">${escapeHtml(r.id)}</span>
+                <span class="badge badge-${escapeHtml(r.status)}">${escapeHtml(r.status)}</span>
+              </div>
+              <div class="meta-line">Member: <strong>${escapeHtml(r.member_id)}</strong> · Dx: ${escapeHtml(r.diagnosis_code)} · DOS: ${escapeHtml(r.date_of_service)}</div>
+              ${r.clinical_note ? `<div class="meta-line"><strong>Clinical Note:</strong> ${escapeHtml(r.clinical_note)}</div>` : ""}
+              <div id="dec-form-${escapeHtml(r.id)}">
+                ${r.procedures.map(p => isOpen ? `
+                  <div style="border-top:1px solid #e2e8f0;padding:8px 0;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px;">
+                      <strong>${escapeHtml(p.code_type)} ${escapeHtml(p.code)} × ${p.units}</strong>
+                      <select class="dec-choice" data-proc="${escapeHtml(p.id)}" style="width:140px" onchange="toggleDenialInput(this)">
+                        <option value="approved">Approve</option>
+                        <option value="denied">Deny</option>
+                      </select>
+                    </div>
+                    <input class="dec-reason hidden" data-proc="${escapeHtml(p.id)}" type="text" placeholder="Required denial reason..." />
+                  </div>
+                ` : `
+                  <div style="border-top:1px solid #f1f5f9;padding:6px 0;font-size:13px;display:flex;justify-content:space-between;">
+                    <span><strong>${escapeHtml(p.code_type)} ${escapeHtml(p.code)}</strong> × ${p.units}</span>
+                    <span><span class="badge badge-${escapeHtml(p.decision)}">${escapeHtml(p.decision)}</span> ${p.denial_reason ? escapeHtml(p.denial_reason) : ""}</span>
+                  </div>
+                `).join("")}
+                ${isOpen ? `<button class="btn btn-sm" style="margin-top:8px" onclick="submitDecision('${escapeHtml(r.id)}')">Submit Final Decision</button>` : ""}
+              </div>
+            </div>
+          `;
+        }).join("");
+      }
+    }
+
+    function toggleDenialInput(sel) {
+      const reasonInput = sel.parentElement.parentElement.querySelector(".dec-reason");
+      reasonInput.classList.toggle("hidden", sel.value !== "denied");
+    }
+
+    async function claimNextFromQueue() {
+      clearFeedback();
+      const res = await apiFetch("POST", "/api/v1/reviewer/queue/claim-next");
+      if (!res.ok) { renderApiError(res); return; }
+      showFeedback("success", "Claimed next request from queue", `Request <code class="mono">${escapeHtml(res.data.id)}</code> is now assigned to you.`);
+      await loadReviewerData();
+    }
+
+    async function claimSpecific(id) {
+      clearFeedback();
+      const res = await apiFetch("POST", `/api/v1/reviewer/requests/${encodeURIComponent(id)}/claim`);
+      if (!res.ok) { renderApiError(res); return; }
+      showFeedback("success", "Request claimed", `Request <code class="mono">${escapeHtml(res.data.id)}</code> is now assigned to you.`);
+      await loadReviewerData();
+    }
+
+    async function claimSpecificById() {
+      const id = document.getElementById("direct-claim-id").value.trim();
+      if (!id) return;
+      await claimSpecific(id);
+    }
+
+    async function submitDecision(requestId) {
+      clearFeedback();
+      const container = document.getElementById(`dec-form-${requestId}`);
+      const decisions = [...container.querySelectorAll(".dec-choice")].map(sel => {
+        const procId = sel.dataset.proc;
+        const decision = sel.value;
+        const reasonEl = container.querySelector(`.dec-reason[data-proc="${procId}"]`);
+        const item = { procedure_id: procId, decision };
+        if (decision === "denied") item.denial_reason = reasonEl.value;
+        return item;
+      });
+      const res = await apiFetch("POST", `/api/v1/reviewer/requests/${encodeURIComponent(requestId)}/decision`, {
+        body: { decisions },
+      });
+      if (!res.ok) { renderApiError(res); return; }
+      showFeedback("success", `Final Decision Recorded (${res.data.status})`, `Audit event & provider office notification created atomically.`);
+      await loadReviewerData();
+    }
+
+    // ---------- MEMBER ----------
+    async function loadMemberData() {
+      const res = await apiFetch("GET", "/api/v1/member/requests");
+      const el = document.getElementById("member-requests-list");
+      if (!res.ok || !res.data.length) {
+        el.innerHTML = `<p class="hint">No prior authorization requests for this member yet.</p>`;
+        return;
+      }
+      el.innerHTML = res.data.map((r, idx) => `
+        <div class="req-item">
+          <div class="req-top">
+            <span class="mono">${escapeHtml(r.id)}</span>
+            <div>
+              <span class="badge badge-${escapeHtml(r.status)}">${escapeHtml(r.status)}</span>
+              <button class="btn btn-secondary btn-sm" style="margin-left:6px" onclick="document.getElementById('mem-raw-${idx}').classList.toggle('hidden')">Raw JSON</button>
+            </div>
+          </div>
+          <div class="meta-line">Date of Service: <strong>${escapeHtml(r.date_of_service)}</strong></div>
+          <ul class="proc-list">
+            ${r.procedures.map(p => `
+              <li>
+                <span><strong>${escapeHtml(p.code_type)} ${escapeHtml(p.code)}</strong> × ${p.units}</span>
+                <span class="badge badge-${escapeHtml(p.decision)}">${escapeHtml(p.decision)}</span>
+              </li>
+            `).join("")}
+          </ul>
+          <pre id="mem-raw-${idx}" class="json-box hidden">${escapeHtml(JSON.stringify(r, null, 2))}</pre>
+        </div>
+      `).join("");
+    }
+
+    // ---------- ADMIN ----------
+    async function loadAdminData() {
+      const [workload, reqs] = await Promise.all([
+        apiFetch("GET", "/api/v1/admin/reviewers/workload"),
+        apiFetch("GET", "/api/v1/admin/requests"),
+      ]);
+
+      const wEl = document.getElementById("admin-workload");
+      wEl.innerHTML = (workload.data || []).map(w => `
+        <div class="workload-card">
+          <div class="workload-num">${w.open_request_count}</div>
+          <div><strong>${escapeHtml(w.display_name)}</strong></div>
+          <div class="mono" style="color:var(--muted)">${escapeHtml(w.reviewer_id)}</div>
+        </div>
+      `).join("");
+
+      const rEl = document.getElementById("admin-requests-list");
+      if (!reqs.ok || !reqs.data.length) {
+        rEl.innerHTML = `<p class="hint">No requests in system yet.</p>`;
+      } else {
+        const revOptions = state.reviewers.map(rev =>
+          `<option value="${escapeHtml(rev.user_id)}">${escapeHtml(rev.display_name)} (${escapeHtml(rev.user_id)})</option>`
+        ).join("");
+
+        rEl.innerHTML = reqs.data.map(r => {
+          const canReassign = r.status === "submitted" || r.status === "in_review";
+          return `
+            <div class="req-item">
+              <div class="req-top">
+                <span class="mono">${escapeHtml(r.id)}</span>
+                <span class="badge badge-${escapeHtml(r.status)}">${escapeHtml(r.status)}</span>
+              </div>
+              <div class="meta-line">
+                Member: <strong>${escapeHtml(r.member_id)}</strong> · Practice: ${escapeHtml(r.practice_id)} ·
+                Assigned: <code>${escapeHtml(r.assigned_reviewer_id || "unassigned")}</code>
+                ${r.decided_by ? ` · Decided by: <code>${escapeHtml(r.decided_by)}</code>` : ""}
+              </div>
+              <div class="btn-group">
+                <button class="btn btn-secondary btn-sm" onclick="loadAuditDetail('${escapeHtml(r.id)}')">View Audit Trail</button>
+                ${canReassign ? `
+                  <select id="reass-${escapeHtml(r.id)}" style="width:auto;padding:4px 8px;font-size:12px">${revOptions}</select>
+                  <button class="btn btn-sm" onclick="reassignRequest('${escapeHtml(r.id)}')">Reassign</button>
+                ` : ""}
+              </div>
+            </div>
+          `;
+        }).join("");
+      }
+
+      await loadSupportAttempts();
+    }
+
+    async function loadAuditDetail(requestId) {
+      const res = await apiFetch("GET", `/api/v1/admin/requests/${encodeURIComponent(requestId)}`);
+      if (!res.ok) { renderApiError(res); return; }
+      const d = res.data;
+      document.getElementById("admin-audit-detail").innerHTML = `
+        <div class="meta-line mono">Request: ${escapeHtml(d.id)} · Status: <strong>${escapeHtml(d.status)}</strong></div>
+        <ul class="proc-list">
+          ${d.audit_events.map(e => `
+            <li>
+              <div>
+                <strong>${escapeHtml(e.event_type)}</strong>
+                <div class="mono" style="color:var(--muted)">actor: ${escapeHtml(e.actor_id)} (${escapeHtml(e.actor_role)})</div>
+                <div class="mono" style="color:var(--muted)">corr: ${escapeHtml(e.correlation_id)} · ${escapeHtml(JSON.stringify(e.metadata))}</div>
+              </div>
+              <span class="mono" style="color:var(--muted)">${escapeHtml(e.occurred_at)}</span>
+            </li>
+          `).join("")}
+        </ul>
+      `;
+    }
+
+    async function reassignRequest(requestId) {
+      clearFeedback();
+      const reviewerId = document.getElementById(`reass-${requestId}`).value;
+      const res = await apiFetch("POST", `/api/v1/admin/requests/${encodeURIComponent(requestId)}/reassign`, {
+        body: { reviewer_id: reviewerId, reason: "Operations queue balancing" },
+      });
+      if (!res.ok) { renderApiError(res); return; }
+      showFeedback("success", "Request reassigned", `Assigned to <code>${escapeHtml(reviewerId)}</code> and logged in audit trail.`);
+      await loadAdminData();
+      await loadAuditDetail(requestId);
+    }
+
+    async function loadSupportAttempts() {
+      const q = document.getElementById("support-req-id").value.trim();
+      const path = q
+        ? `/api/v1/admin/support/submissions?request_id=${encodeURIComponent(q)}`
+        : `/api/v1/admin/support/submissions`;
+      const res = await apiFetch("GET", path);
+      const el = document.getElementById("admin-support-list");
+      if (!res.ok || !res.data.length) {
+        el.innerHTML = `<p class="hint">No matching submission attempts found.</p>`;
+        return;
+      }
+      el.innerHTML = res.data.map(a => `
+        <div class="req-item">
+          <div class="req-top">
+            <span class="mono">${escapeHtml(a.correlation_id)}</span>
+            <span class="badge badge-${a.outcome === "accepted" ? "approved" : "denied"}">${escapeHtml(a.outcome)}</span>
+          </div>
+          <div class="meta-line">Practice: <strong>${escapeHtml(a.practice_id)}</strong> · Actor: ${escapeHtml(a.actor_id)}</div>
+          ${a.error_codes.length ? `<div class="mono" style="color:var(--red-text)">Codes: ${escapeHtml(a.error_codes.join(", "))}</div>` : `<div class="mono" style="color:var(--green-text)">Prior Auth ID: ${escapeHtml(a.prior_auth_id)}</div>`}
+        </div>
+      `).join("");
+    }
+
+    init();
+  </script>
+</body>
+</html>
