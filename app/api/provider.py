@@ -119,6 +119,11 @@ class ProviderRequestView(BaseModel):
     procedures: list[ProviderProcedureView]
 
 
+class ProviderPatientView(BaseModel):
+    member_id: str
+    full_name: str
+
+
 class ProviderNotificationView(BaseModel):
     id: str
     request_id: str
@@ -250,6 +255,19 @@ def get_request(
 ) -> ProviderRequestView:
     req = query_service.get_provider_request(session, user=user, request_id=request_id)
     return _to_provider_view(req)
+
+
+@router.get(
+    "/patients",
+    response_model=list[ProviderPatientView],
+    summary="List patients linked to your practice",
+)
+def list_patients(
+    user: AuthenticatedUser = Depends(require_provider),
+    session: Session = Depends(get_db_session),
+) -> list[ProviderPatientView]:
+    patients = query_service.list_provider_patients(session, user=user)
+    return [ProviderPatientView(member_id=mid, full_name=name) for mid, name in patients]
 
 
 @router.get(

@@ -16,7 +16,7 @@ def _future_service_date(days: int = 30) -> str:
 def test_swagger_docs_and_openapi_schema_are_available(client: TestClient) -> None:
     explorer = client.get("/")
     assert explorer.status_code == 200
-    assert "Oxbridge Health — Prior Authorization Explorer" in explorer.text
+    assert "Oxbridge Health — Prior Authorization Portal" in explorer.text
 
     assert client.get("/docs").status_code == 200
     assert client.get("/redoc").status_code == 200
@@ -51,6 +51,13 @@ def test_health_and_dev_token_minter(client: TestClient) -> None:
         headers={"Authorization": f"Bearer {access_token}"},
     )
     assert me_requests.status_code == 200
+
+    me_patients = client.get(
+        "/api/v1/provider/patients",
+        headers={"Authorization": f"Bearer {access_token}"},
+    )
+    assert me_patients.status_code == 200
+    assert {p["member_id"] for p in me_patients.json()} == {"mem-alice", "mem-carol"}
 
 
 def test_auth_rejects_missing_bad_token_and_wrong_role(

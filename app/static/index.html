@@ -3,16 +3,17 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Oxbridge Health — Prior Authorization Explorer</title>
+  <title>Oxbridge Health — Prior Authorization Portal</title>
   <style>
     :root {
-      --bg: #f8fafc;
+      --bg: #f4f6f9;
       --surface: #ffffff;
       --border: #e2e8f0;
       --text: #0f172a;
       --muted: #64748b;
-      --primary: #2563eb;
-      --primary-hover: #1d4ed8;
+      --brand: #0f4c81;
+      --brand-hover: #0c3d68;
+      --brand-soft: #e8f1f8;
       --green-bg: #dcfce7;
       --green-text: #166534;
       --red-bg: #fee2e2;
@@ -23,7 +24,8 @@
       --blue-text: #1e40af;
       --purple-bg: #f3e8ff;
       --purple-text: #6b21a8;
-      --radius: 10px;
+      --radius: 12px;
+      --shadow: 0 1px 3px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
     }
     * { box-sizing: border-box; }
     body {
@@ -31,153 +33,227 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, sans-serif;
       background: var(--bg);
       color: var(--text);
-      line-height: 1.45;
+      line-height: 1.5;
     }
-    header {
-      background: #0f172a;
-      color: #fff;
-      padding: 14px 24px;
+
+    /* Top Navigation Bar */
+    .topbar {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 30;
+    }
+    .topbar-inner {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 12px 24px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 16px;
       flex-wrap: wrap;
     }
-    header h1 { font-size: 18px; margin: 0; font-weight: 600; letter-spacing: -0.01em; }
-    header .sub { font-size: 12px; color: #94a3b8; }
-    header .links { display: flex; gap: 10px; align-items: center; }
-    header a {
-      color: #cbd5e1;
-      text-decoration: none;
-      font-size: 13px;
-      padding: 6px 10px;
-      border-radius: 6px;
-      border: 1px solid #334155;
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
     }
-    header a:hover { background: #1e293b; color: #fff; }
+    .brand-mark {
+      width: 34px;
+      height: 34px;
+      border-radius: 9px;
+      background: var(--brand);
+      color: #fff;
+      display: grid;
+      place-items: center;
+      font-weight: 700;
+      font-size: 16px;
+    }
+    .brand-title { font-size: 16px; font-weight: 700; color: var(--text); line-height: 1.2; }
+    .brand-sub { font-size: 12px; color: var(--muted); }
 
-    .container { max-width: 1220px; margin: 0 auto; padding: 20px 24px 80px; }
-
-    .persona-bar {
-      background: var(--surface);
+    .account-controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .account-picker {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #f8fafc;
       border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 14px 16px;
-      margin-bottom: 18px;
+      padding: 5px 10px;
+      border-radius: 9px;
     }
-    .persona-bar-top {
+    .account-picker label {
+      margin: 0;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+    .account-picker select {
+      border: none;
+      background: transparent;
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--text);
+      padding: 2px 4px;
+      width: auto;
+      cursor: pointer;
+      outline: none;
+    }
+    .docs-link {
+      font-size: 12.5px;
+      color: var(--muted);
+      text-decoration: none;
+      padding: 6px 10px;
+      border-radius: 7px;
+      border: 1px solid var(--border);
+    }
+    .docs-link:hover { color: var(--brand); border-color: var(--brand); background: var(--brand-soft); }
+
+    /* Page Layout */
+    .container { max-width: 1180px; margin: 0 auto; padding: 24px 24px 56px; }
+
+    .page-header {
+      margin-bottom: 20px;
       display: flex;
       justify-content: space-between;
-      align-items: center;
+      align-items: flex-end;
       flex-wrap: wrap;
-      gap: 8px;
-      margin-bottom: 10px;
+      gap: 12px;
     }
-    .persona-bar-top strong { font-size: 13px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
-    .active-banner { font-size: 13px; color: var(--muted); }
-    .active-banner code { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; color: var(--text); }
-    .persona-buttons { display: flex; flex-wrap: wrap; gap: 8px; }
-    .persona-btn {
-      border: 1px solid var(--border);
-      background: #f8fafc;
-      color: var(--text);
-      padding: 7px 12px;
-      border-radius: 8px;
+    .page-header h1 { margin: 0; font-size: 22px; font-weight: 700; letter-spacing: -0.015em; }
+    .page-header p { margin: 4px 0 0; font-size: 14px; color: var(--muted); }
+
+    .tabs {
+      display: flex;
+      gap: 6px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 20px;
+    }
+    .tab-btn {
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      padding: 10px 14px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--muted);
       cursor: pointer;
-      font-size: 13px;
       display: inline-flex;
       align-items: center;
-      gap: 6px;
-      transition: all 0.12s ease;
+      gap: 7px;
     }
-    .persona-btn:hover { border-color: var(--primary); background: #eff6ff; }
-    .persona-btn.active {
-      background: var(--primary);
-      border-color: var(--primary);
-      color: #fff;
-      font-weight: 600;
+    .tab-btn:hover { color: var(--text); }
+    .tab-btn.active { color: var(--brand); border-bottom-color: var(--brand); }
+    .tab-count {
+      background: #e2e8f0;
+      color: #334155;
+      font-size: 11.5px;
+      padding: 1px 7px;
+      border-radius: 999px;
     }
-    .role-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
-    .dot-provider_office { background: #2563eb; }
-    .dot-reviewer { background: #7c3aed; }
-    .dot-member { background: #16a34a; }
-    .dot-admin { background: #ea580c; }
-    .persona-btn.active .role-dot { background: #fff; }
+    .tab-btn.active .tab-count { background: var(--brand-soft); color: var(--brand); }
 
-    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
-    @media (max-width: 920px) { .grid-2 { grid-template-columns: 1fr; } }
+    .grid-2 { display: grid; grid-template-columns: 1.05fr 0.95fr; gap: 20px; align-items: start; }
+    @media (max-width: 900px) { .grid-2 { grid-template-columns: 1fr; } }
 
     .card {
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 18px;
+      padding: 20px;
+      box-shadow: var(--shadow);
       margin-bottom: 18px;
     }
     .card-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      gap: 10px;
-      margin-bottom: 12px;
+      gap: 12px;
+      margin-bottom: 14px;
       flex-wrap: wrap;
     }
-    .card h2 { margin: 0; font-size: 16px; }
-    .card h3 { margin: 0 0 8px; font-size: 14px; }
-    .hint { font-size: 12.5px; color: var(--muted); margin: 0 0 12px; }
+    .card h2 { margin: 0; font-size: 16px; font-weight: 700; }
+    .muted { color: var(--muted); font-size: 13px; }
 
-    label { display: block; font-size: 12.5px; font-weight: 600; color: #334155; margin-bottom: 4px; }
+    /* Form Controls */
+    label { display: block; font-size: 13px; font-weight: 600; color: #334155; margin-bottom: 5px; }
     input[type="text"], input[type="date"], input[type="number"], select, textarea {
       width: 100%;
-      padding: 8px 10px;
+      padding: 9px 11px;
       border: 1px solid #cbd5e1;
-      border-radius: 7px;
-      font-size: 13.5px;
+      border-radius: 8px;
+      font-size: 14px;
       font-family: inherit;
+      color: var(--text);
       background: #fff;
+      transition: border-color 0.12s ease;
     }
-    textarea { min-height: 68px; resize: vertical; }
-    .field-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 10px; }
+    input:focus, select:focus, textarea:focus { outline: none; border-color: var(--brand); }
+    textarea { min-height: 78px; resize: vertical; }
+    .field { margin-bottom: 14px; }
+    .field-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 560px) { .field-grid { grid-template-columns: 1fr; } }
+    .field-help { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
     .proc-row {
       display: grid;
-      grid-template-columns: 95px 1fr 85px 135px 34px;
+      grid-template-columns: 110px 1fr 95px 36px;
       gap: 8px;
       align-items: center;
       margin-bottom: 8px;
     }
-    @media (max-width: 640px) { .proc-row { grid-template-columns: 1fr 1fr; } }
-    .checkbox-inline { display: flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 500; margin: 0; cursor: pointer; }
 
-    button.btn {
-      background: var(--primary);
+    /* Buttons */
+    .btn {
+      background: var(--brand);
       color: #fff;
       border: none;
-      padding: 8px 14px;
-      border-radius: 7px;
-      font-size: 13px;
+      padding: 9px 16px;
+      border-radius: 8px;
+      font-size: 13.5px;
       font-weight: 600;
       cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: background 0.12s ease;
     }
-    button.btn:hover { background: var(--primary-hover); }
-    button.btn-secondary {
-      background: #f1f5f9;
+    .btn:hover { background: var(--brand-hover); }
+    .btn-secondary {
+      background: #f8fafc;
       color: var(--text);
       border: 1px solid #cbd5e1;
     }
-    button.btn-secondary:hover { background: #e2e8f0; }
-    button.btn-danger { background: #dc2626; }
-    button.btn-danger:hover { background: #b91c1c; }
-    button.btn-sm { padding: 5px 10px; font-size: 12px; }
-    .btn-group { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .btn-secondary:hover { background: #f1f5f9; }
+    .btn-sm { padding: 6px 11px; font-size: 12.5px; }
+    .btn-icon {
+      width: 34px;
+      height: 36px;
+      padding: 0;
+      background: #f8fafc;
+      color: var(--muted);
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    .btn-icon:hover { background: #fee2e2; color: #991b1b; border-color: #fecaca; }
 
+    /* Status Badges */
     .badge {
       display: inline-block;
-      padding: 2px 8px;
+      padding: 3px 10px;
       border-radius: 999px;
-      font-size: 11.5px;
+      font-size: 12px;
       font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.02em;
     }
     .badge-submitted { background: var(--blue-bg); color: var(--blue-text); }
     .badge-in_review { background: var(--purple-bg); color: var(--purple-text); }
@@ -186,305 +262,453 @@
     .badge-denied { background: var(--red-bg); color: var(--red-text); }
     .badge-pending { background: #f1f5f9; color: #475569; }
 
+    /* Alerts */
     .alert {
-      border-radius: 8px;
-      padding: 12px 14px;
-      margin-bottom: 14px;
-      font-size: 13px;
+      border-radius: 10px;
+      padding: 13px 16px;
+      margin-bottom: 18px;
+      font-size: 13.5px;
     }
-    .alert-error { background: var(--red-bg); color: var(--red-text); border: 1px solid #fecaca; }
-    .alert-success { background: var(--green-bg); color: var(--green-text); border: 1px solid #bbf7d0; }
-    .alert-info { background: var(--blue-bg); color: var(--blue-text); border: 1px solid #bfdbfe; }
-    .alert ul { margin: 6px 0 0; padding-left: 18px; }
-
-    .req-item {
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 12px 14px;
-      margin-bottom: 10px;
-      background: #fcfdff;
-    }
-    .req-top {
+    .alert-error { background: #fef2f2; color: var(--red-text); border: 1px solid #fecaca; }
+    .alert-success { background: #f0fdf4; color: var(--green-text); border: 1px solid #bbf7d0; }
+    .alert-info { background: #eff6ff; color: var(--blue-text); border: 1px solid #bfdbfe; }
+    .alert ul { margin: 8px 0 0; padding-left: 20px; }
+    .alert li { margin-bottom: 4px; }
+    .ref-strip {
+      margin-top: 10px;
+      padding-top: 8px;
+      border-top: 1px solid rgba(0, 0, 0, 0.08);
+      font-size: 12.5px;
       display: flex;
-      justify-content: space-between;
       align-items: center;
       gap: 10px;
       flex-wrap: wrap;
-      margin-bottom: 6px;
     }
-    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; }
-    .meta-line { font-size: 12.5px; color: var(--muted); margin-bottom: 8px; }
-    .proc-list { list-style: none; padding: 0; margin: 6px 0 0; }
-    .proc-list li {
-      padding: 6px 8px;
-      border-top: 1px solid #f1f5f9;
-      font-size: 13px;
+    .ref-code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      background: rgba(255, 255, 255, 0.7);
+      padding: 2px 7px;
+      border-radius: 5px;
+      font-size: 12px;
+    }
+
+    /* Request Cards */
+    .req-card {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 15px 16px;
+      margin-bottom: 12px;
+      background: #fff;
+    }
+    .req-card-top {
       display: flex;
       justify-content: space-between;
+      align-items: flex-start;
       gap: 10px;
       flex-wrap: wrap;
+      margin-bottom: 8px;
     }
-
-    .workload-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
-    .workload-card {
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 12px 14px;
+    .req-title { font-weight: 700; font-size: 14.5px; }
+    .req-meta { font-size: 13px; color: var(--muted); margin-bottom: 8px; }
+    .note-box {
       background: #f8fafc;
+      border-left: 3px solid #cbd5e1;
+      padding: 8px 11px;
+      border-radius: 0 6px 6px 0;
+      font-size: 13px;
+      color: #334155;
+      margin-bottom: 10px;
     }
-    .workload-num { font-size: 26px; font-weight: 700; color: var(--primary); }
+    .proc-table { width: 100%; border-collapse: collapse; margin-top: 6px; font-size: 13.5px; }
+    .proc-table td {
+      padding: 8px 4px;
+      border-top: 1px solid #f1f5f9;
+      vertical-align: top;
+    }
+    .proc-table td:last-child { text-align: right; }
+    .denial-text {
+      display: block;
+      font-size: 12.5px;
+      color: var(--red-text);
+      margin-top: 3px;
+      text-align: right;
+    }
 
-    pre.json-box {
-      background: #0f172a;
-      color: #e2e8f0;
-      padding: 12px;
-      border-radius: 8px;
-      overflow-x: auto;
-      font-size: 12px;
-      max-height: 280px;
-      margin: 8px 0 0;
+    /* Reviewer decision controls */
+    .decision-row {
+      border-top: 1px solid var(--border);
+      padding: 12px 0;
     }
-
-    .inspector {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: #0f172a;
-      color: #e2e8f0;
-      border-top: 1px solid #334155;
-      z-index: 40;
-    }
-    .inspector-bar {
-      max-width: 1220px;
-      margin: 0 auto;
-      padding: 8px 24px;
+    .decision-row-top {
       display: flex;
       justify-content: space-between;
       align-items: center;
       gap: 12px;
-      font-size: 12.5px;
+      flex-wrap: wrap;
+    }
+    .decision-toggle {
+      display: inline-flex;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .decision-toggle button {
+      border: none;
+      background: #fff;
+      padding: 6px 14px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
       cursor: pointer;
     }
-    .inspector-body {
-      max-width: 1220px;
-      margin: 0 auto;
-      padding: 0 24px 14px;
-      display: none;
+    .decision-toggle button.sel-approve { background: var(--green-bg); color: var(--green-text); }
+    .decision-toggle button.sel-deny { background: var(--red-bg); color: var(--red-text); }
+
+    /* KPI Stats */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 14px;
+      margin-bottom: 20px;
     }
-    .inspector.open .inspector-body { display: block; }
+    .kpi-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+      box-shadow: var(--shadow);
+    }
+    .kpi-label { font-size: 12.5px; color: var(--muted); font-weight: 600; }
+    .kpi-value { font-size: 26px; font-weight: 700; color: var(--text); margin-top: 4px; }
+    .kpi-sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+    /* Timeline */
+    .timeline { list-style: none; padding: 0; margin: 0; }
+    .timeline li {
+      position: relative;
+      padding: 0 0 16px 22px;
+      border-left: 2px solid var(--border);
+      margin-left: 6px;
+    }
+    .timeline li:last-child { border-left-color: transparent; padding-bottom: 0; }
+    .timeline li::before {
+      content: "";
+      position: absolute;
+      left: -6px;
+      top: 4px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--brand);
+    }
+    .timeline-title { font-weight: 600; font-size: 13.5px; }
+    .timeline-meta { font-size: 12.5px; color: var(--muted); }
+
+    /* Modal Popup */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.48);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 60;
+    }
+    .modal {
+      background: var(--surface);
+      border-radius: 14px;
+      max-width: 480px;
+      width: 100%;
+      padding: 24px;
+      box-shadow: 0 20px 40px rgba(15, 23, 42, 0.22);
+    }
+    .modal h3 { margin: 0 0 8px; font-size: 18px; }
+    .modal p { margin: 0 0 12px; font-size: 14px; color: #334155; }
+    .modal-list {
+      background: #fffbeb;
+      border: 1px solid #fde68a;
+      border-radius: 8px;
+      padding: 10px 14px;
+      margin: 12px 0 18px;
+      font-size: 13.5px;
+      color: var(--amber-text);
+    }
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 28px 16px;
+      color: var(--muted);
+      font-size: 14px;
+    }
     .hidden { display: none !important; }
   </style>
 </head>
 <body>
-  <header>
-    <div>
-      <h1>Oxbridge Health — Prior Authorization Explorer</h1>
-      <div class="sub">Interactive dev console wired directly to the real JWT-authenticated REST API</div>
-    </div>
-    <div class="links">
-      <a href="/docs" target="_blank">Swagger UI (/docs)</a>
-      <a href="/redoc" target="_blank">ReDoc (/redoc)</a>
-      <a href="/openapi.json" target="_blank">OpenAPI JSON</a>
+  <!-- Clean Healthcare Portal Navigation -->
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <div class="brand-mark">OH</div>
+        <div>
+          <div class="brand-title">Oxbridge Health</div>
+          <div class="brand-sub">Prior Authorization Portal</div>
+        </div>
+      </div>
+
+      <div class="account-controls">
+        <div class="account-picker">
+          <label for="account-select">Signed in as</label>
+          <select id="account-select" onchange="switchAccount(this.value)"></select>
+        </div>
+        <a class="docs-link" href="/docs" target="_blank">Partner API Docs</a>
+      </div>
     </div>
   </header>
 
-  <div class="container">
-    <!-- One-click Persona / JWT Switcher -->
-    <section class="persona-bar">
-      <div class="persona-bar-top">
-        <strong>1. Switch Persona (mints a real signed HS256 JWT)</strong>
-        <div id="active-user-banner" class="active-banner">Loading seeded accounts...</div>
+  <main class="container">
+    <div id="banner-area"></div>
+
+    <!-- ==================== PROVIDER OFFICE PORTAL ==================== -->
+    <section id="portal-provider_office" class="hidden">
+      <div class="page-header">
+        <div>
+          <h1 id="provider-heading">Provider Portal</h1>
+          <p>Submit prior authorization requests for your patients and track approval status.</p>
+        </div>
       </div>
-      <div id="persona-buttons" class="persona-buttons"></div>
-    </section>
 
-    <!-- Global feedback banner -->
-    <div id="feedback-area"></div>
+      <div class="tabs">
+        <button class="tab-btn active" id="ptab-requests" onclick="setProviderTab('requests')">
+          Requests &amp; New Submission <span id="pcount-requests" class="tab-count">0</span>
+        </button>
+        <button class="tab-btn" id="ptab-notifications" onclick="setProviderTab('notifications')">
+          Decision Updates <span id="pcount-notifs" class="tab-count">0</span>
+        </button>
+      </div>
 
-    <!-- PROVIDER OFFICE VIEW -->
-    <section id="view-provider_office" class="hidden">
-      <div class="grid-2">
+      <div id="provider-tab-requests" class="grid-2">
         <div class="card">
           <div class="card-header">
-            <h2>Submit Prior Authorization</h2>
-          </div>
-          <p class="hint">Quick-fill presets for testing every validation rule:</p>
-          <div class="btn-group" style="margin-bottom: 12px;">
-            <button type="button" class="btn btn-secondary btn-sm" onclick="fillPreset('alice-valid')">Valid Alice (Maine)</button>
-            <button type="button" class="btn btn-secondary btn-sm" onclick="fillPreset('carol-invalid')">Invalid Carol (3 errors)</button>
-            <button type="button" class="btn btn-secondary btn-sm" onclick="fillPreset('high-units')">High Units &gt;30 Typo</button>
-            <button type="button" class="btn btn-secondary btn-sm" onclick="fillPreset('bob-valid')">Valid Bob (Hawaii)</button>
+            <h2>New Prior Authorization Request</h2>
           </div>
 
-          <form id="submit-form" onsubmit="handleSubmitRequest(event)">
-            <div class="field-row">
-              <div>
-                <label for="f-member">Member ID</label>
-                <input id="f-member" type="text" value="mem-alice" required />
+          <form id="provider-form" onsubmit="handleProviderSubmit(event)">
+            <div class="field">
+              <label for="f-patient">Patient</label>
+              <select id="f-patient" required></select>
+              <div class="field-help">Only patients linked to your practice are listed.</div>
+            </div>
+
+            <div class="field-grid">
+              <div class="field">
+                <label for="f-dx">Diagnosis Code (ICD-10)</label>
+                <input id="f-dx" type="text" placeholder="e.g. M54.50" value="M54.50" required />
               </div>
-              <div>
-                <label for="f-dx">Diagnosis (ICD-10)</label>
-                <input id="f-dx" type="text" value="M54.50" required />
-              </div>
-              <div>
-                <label for="f-dos">Date of Service</label>
+              <div class="field">
+                <label for="f-dos">Planned Date of Service</label>
                 <input id="f-dos" type="date" required />
+                <div class="field-help">Today through 1 year ahead (practice local time).</div>
               </div>
             </div>
 
-            <label>Procedures (CPT / HCPCS)</label>
-            <div id="proc-rows"></div>
-            <button type="button" class="btn btn-secondary btn-sm" style="margin-bottom: 12px;" onclick="addProcRow()">+ Add Procedure</button>
-
-            <div class="field-row">
-              <div>
-                <label for="f-idem">Idempotency-Key (optional)</label>
-                <input id="f-idem" type="text" placeholder="e.g. demo-retry-001" />
-              </div>
+            <div class="field">
+              <label>Procedures</label>
+              <div id="proc-rows"></div>
+              <button type="button" class="btn btn-secondary btn-sm" onclick="addProcRow()">+ Add Procedure</button>
             </div>
 
-            <div style="margin-bottom: 12px;">
-              <label for="f-note">Clinical Note (internal — never shown to members)</label>
-              <textarea id="f-note">Patient reports 8 weeks of persistent lumbar radiculopathy.</textarea>
+            <div class="field">
+              <label for="f-note">Clinical Note (Optional)</label>
+              <textarea id="f-note" placeholder="Relevant clinical history or supporting documentation..."></textarea>
+              <div class="field-help">Visible to Oxbridge clinical reviewers only; never shared with patients.</div>
             </div>
 
-            <button type="submit" class="btn">Submit Prior Authorization</button>
+            <button type="submit" class="btn">Submit Request</button>
           </form>
         </div>
 
+        <div class="card">
+          <div class="card-header">
+            <h2>Submitted Requests</h2>
+            <button class="btn btn-secondary btn-sm" onclick="loadProviderPortal()">Refresh</button>
+          </div>
+          <div id="provider-requests-list"></div>
+        </div>
+      </div>
+
+      <div id="provider-tab-notifications" class="card hidden">
+        <div class="card-header">
+          <h2>Decision Notifications</h2>
+          <button class="btn btn-secondary btn-sm" onclick="loadProviderPortal()">Refresh</button>
+        </div>
+        <div id="provider-notifications-list"></div>
+      </div>
+    </section>
+
+    <!-- ==================== REVIEWER PORTAL ==================== -->
+    <section id="portal-reviewer" class="hidden">
+      <div class="page-header">
         <div>
-          <div class="card">
-            <div class="card-header">
-              <h2>My Practice's Requests</h2>
-              <button class="btn btn-secondary btn-sm" onclick="loadProviderData()">Refresh</button>
-            </div>
-            <div id="provider-requests-list"><p class="hint">No requests yet.</p></div>
-          </div>
-
-          <div class="card">
-            <div class="card-header">
-              <h2>Decision Notifications (Outbox)</h2>
-            </div>
-            <div id="provider-notifications-list"><p class="hint">No notifications yet.</p></div>
-          </div>
+          <h1 id="reviewer-heading">Clinical Review Workspace</h1>
+          <p>Pick up unassigned requests from the queue and record final per-procedure decisions.</p>
         </div>
-      </div>
-    </section>
-
-    <!-- REVIEWER VIEW -->
-    <section id="view-reviewer" class="hidden">
-      <div class="grid-2">
-        <div class="card">
-          <div class="card-header">
-            <h2>Eligible Review Queue</h2>
-            <div class="btn-group">
-              <button class="btn btn-sm" onclick="claimNextFromQueue()">Claim Next (SKIP LOCKED)</button>
-              <button class="btn btn-secondary btn-sm" onclick="loadReviewerData()">Refresh</button>
-            </div>
-          </div>
-          <p class="hint">Patients you treat (conflict of interest) are automatically excluded from your queue.</p>
-          <div id="reviewer-queue-list"><p class="hint">Queue is empty.</p></div>
-
-          <hr style="border: 0; border-top: 1px solid var(--border); margin: 14px 0;" />
-          <h3>Test Direct Claim by Request ID (e.g., COI Demo)</h3>
-          <div style="display: flex; gap: 8px;">
-            <input id="direct-claim-id" type="text" placeholder="Paste any request UUID to test direct claim / COI" />
-            <button class="btn btn-secondary" onclick="claimSpecificById()">Claim ID</button>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="card-header">
-            <h2>My Assigned Requests</h2>
-            <button class="btn btn-secondary btn-sm" onclick="loadReviewerData()">Refresh</button>
-          </div>
-          <div id="reviewer-assigned-list"><p class="hint">No assigned requests yet.</p></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- MEMBER VIEW -->
-    <section id="view-member" class="hidden">
-      <div class="card">
-        <div class="card-header">
-          <h2>My Prior Authorization Requests</h2>
-          <button class="btn btn-secondary btn-sm" onclick="loadMemberData()">Refresh</button>
-        </div>
-        <div class="alert alert-info">
-          <strong>HIPAA Privacy Boundary:</strong> Member endpoints structurally omit <code>clinical_note</code> and <code>denial_reason</code>. Toggle "Raw JSON" on any request below to verify.
-        </div>
-        <div id="member-requests-list"><p class="hint">No prior authorization requests found.</p></div>
-      </div>
-    </section>
-
-    <!-- ADMIN VIEW -->
-    <section id="view-admin" class="hidden">
-      <div class="card">
-        <div class="card-header">
-          <h2>Reviewer Open Workload</h2>
-          <button class="btn btn-secondary btn-sm" onclick="loadAdminData()">Refresh All</button>
-        </div>
-        <div id="admin-workload" class="workload-grid"></div>
+        <button class="btn" onclick="pickUpNextRequest()">Pick Up Next Request</button>
       </div>
 
       <div class="grid-2">
         <div class="card">
           <div class="card-header">
-            <h2>All Requests &amp; Audit Trail</h2>
+            <h2>Review Queue</h2>
+            <button class="btn btn-secondary btn-sm" onclick="loadReviewerPortal()">Refresh</button>
           </div>
-          <div id="admin-requests-list"><p class="hint">No requests in system yet.</p></div>
+          <p class="muted" style="margin-top:-6px">Only eligible requests are shown. Patients you treat are automatically excluded.</p>
+          <div id="reviewer-queue-list"></div>
         </div>
 
-        <div>
-          <div class="card">
-            <div class="card-header">
-              <h2>Selected Request Audit Trail</h2>
-            </div>
-            <div id="admin-audit-detail"><p class="hint">Click "View Audit Trail" on any request to inspect its immutable compliance timeline.</p></div>
+        <div class="card">
+          <div class="card-header">
+            <h2>My Assigned Cases</h2>
+            <button class="btn btn-secondary btn-sm" onclick="loadReviewerPortal()">Refresh</button>
           </div>
-
-          <div class="card">
-            <div class="card-header">
-              <h2>Support Desk Lookup (PHI-Free)</h2>
-            </div>
-            <p class="hint">Trace "my submission didn't go through" calls by <code>X-Request-ID</code> or list recent attempts.</p>
-            <div style="display: flex; gap: 8px; margin-bottom: 12px;">
-              <input id="support-req-id" type="text" placeholder="Filter by X-Request-ID (optional)" />
-              <button class="btn btn-sm" onclick="loadSupportAttempts()">Search</button>
-            </div>
-            <div id="admin-support-list"><p class="hint">No submission attempts yet.</p></div>
-          </div>
+          <div id="reviewer-assigned-list"></div>
         </div>
       </div>
     </section>
-  </div>
 
-  <!-- Live API Inspector Footer -->
-  <div id="inspector" class="inspector">
-    <div class="inspector-bar" onclick="toggleInspector()">
-      <span id="inspector-summary" class="mono">Last API Call: ready</span>
-      <span style="color: #94a3b8;">Click to expand / collapse raw response</span>
-    </div>
-    <div class="inspector-body">
-      <pre id="inspector-json" class="json-box">{}</pre>
+    <!-- ==================== MEMBER PORTAL ==================== -->
+    <section id="portal-member" class="hidden">
+      <div class="page-header">
+        <div>
+          <h1 id="member-heading">My Prior Authorizations</h1>
+          <p>Track the approval status of procedures submitted by your doctor's office.</p>
+        </div>
+        <button class="btn btn-secondary btn-sm" onclick="loadMemberPortal()">Refresh</button>
+      </div>
+
+      <div id="member-requests-list"></div>
+    </section>
+
+    <!-- ==================== OPERATIONS ADMIN PORTAL ==================== -->
+    <section id="portal-admin" class="hidden">
+      <div class="page-header">
+        <div>
+          <h1>Utilization Management Operations</h1>
+          <p>Monitor reviewer workload, reassign open cases, review audit history, and assist provider offices.</p>
+        </div>
+        <button class="btn btn-secondary btn-sm" onclick="loadAdminPortal()">Refresh</button>
+      </div>
+
+      <div id="admin-kpis" class="kpi-grid"></div>
+
+      <div class="tabs">
+        <button class="tab-btn active" id="atab-cases" onclick="setAdminTab('cases')">
+          All Requests <span id="acount-cases" class="tab-count">0</span>
+        </button>
+        <button class="tab-btn" id="atab-support" onclick="setAdminTab('support')">
+          Support Desk <span id="acount-support" class="tab-count">0</span>
+        </button>
+      </div>
+
+      <div id="admin-tab-cases" class="grid-2">
+        <div class="card">
+          <div class="card-header">
+            <h2>Prior Authorization Requests</h2>
+            <select id="admin-status-filter" style="width:auto;padding:6px 10px;font-size:13px" onchange="loadAdminPortal()">
+              <option value="">All Statuses</option>
+              <option value="submitted">Submitted</option>
+              <option value="in_review">In Review</option>
+              <option value="approved">Approved</option>
+              <option value="partially_approved">Partially Approved</option>
+              <option value="denied">Denied</option>
+            </select>
+          </div>
+          <div id="admin-requests-list"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <h2>Audit History</h2>
+          </div>
+          <div id="admin-audit-panel">
+            <div class="empty-state">Select "View Audit History" on any request to inspect every action taken.</div>
+          </div>
+        </div>
+      </div>
+
+      <div id="admin-tab-support" class="card hidden">
+        <div class="card-header">
+          <h2>Submission Support Lookup</h2>
+        </div>
+        <p class="muted" style="margin-top:-6px">
+          Look up why a provider office's submission did not go through using the reference number they received. No patient medical details are displayed.
+        </p>
+        <div style="display:flex;gap:10px;margin-bottom:16px;max-width:560px">
+          <input id="support-search-input" type="text" placeholder="Enter Reference Number (optional)" />
+          <button class="btn btn-sm" onclick="loadSupportDesk()">Search</button>
+          <button class="btn btn-secondary btn-sm" onclick="document.getElementById('support-search-input').value='';loadSupportDesk()">Show All</button>
+        </div>
+        <div id="admin-support-list"></div>
+      </div>
+    </section>
+  </main>
+
+  <!-- High-Units (>30) Confirmation Popup Modal -->
+  <div id="high-units-modal" class="modal-backdrop hidden">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <h3 id="modal-title">Confirm High Procedure Quantity</h3>
+      <p>
+        Quantities over <strong>30 units</strong> are usually entered by mistake. Please review the procedure(s) below before submitting:
+      </p>
+      <div id="high-units-modal-list" class="modal-list"></div>
+      <p class="muted">If this quantity is clinically intentional, confirm below to proceed with submission.</p>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" onclick="closeHighUnitsModal()">Go Back &amp; Edit</button>
+        <button type="button" class="btn" onclick="confirmAndResubmitHighUnits()">Yes, Quantity Is Correct — Submit</button>
+      </div>
     </div>
   </div>
 
   <script>
+    const ROLE_LABELS = {
+      provider_office: "Provider Office",
+      reviewer: "Reviewer",
+      member: "Member",
+      admin: "Operations Admin",
+    };
+
+    const STATUS_LABELS = {
+      submitted: "Submitted",
+      in_review: "In Review",
+      approved: "Approved",
+      partially_approved: "Partially Approved",
+      denied: "Denied",
+      pending: "Pending",
+    };
+
+    const EVENT_LABELS = {
+      request_submitted: "Request Submitted",
+      request_claimed: "Picked Up for Review",
+      request_reassigned: "Reassigned by Operations",
+      request_decided: "Final Decision Recorded",
+    };
+
     const state = {
       users: [],
       reviewers: [],
+      userMap: {},
       activeUser: null,
       token: null,
-      lastRequestId: null,
+      pendingHighUnitsPayload: null,
+      pendingIdemKey: null,
+      decisionDrafts: {}, // requestId -> { procId: { decision, denial_reason } }
     };
-
-    function futureDate(days) {
-      const d = new Date();
-      d.setDate(d.getDate() + days);
-      return d.toISOString().slice(0, 10);
-    }
 
     function escapeHtml(str) {
       return String(str ?? "")
@@ -494,441 +718,590 @@
         .replace(/"/g, "&quot;");
     }
 
-    function toggleInspector() {
-      document.getElementById("inspector").classList.toggle("open");
+    function futureDate(days) {
+      const d = new Date();
+      d.setDate(d.getDate() + days);
+      return d.toISOString().slice(0, 10);
     }
 
-    function showFeedback(type, title, bodyHtml) {
-      const area = document.getElementById("feedback-area");
-      area.innerHTML = `<div class="alert alert-${type}"><strong>${escapeHtml(title)}</strong>${bodyHtml ? `<div style="margin-top:4px">${bodyHtml}</div>` : ""}</div>`;
+    function formatTime(iso) {
+      if (!iso) return "";
+      try {
+        return new Date(iso).toLocaleString(undefined, {
+          month: "short", day: "numeric", year: "numeric",
+          hour: "numeric", minute: "2-digit",
+        });
+      } catch {
+        return iso;
+      }
     }
 
-    function clearFeedback() {
-      document.getElementById("feedback-area").innerHTML = "";
+    function shortId(id) {
+      return id ? id.slice(0, 8).toUpperCase() : "";
     }
 
-    async function apiFetch(method, path, { body = null, headers = {}, auth = true } = {}) {
+    function userName(id) {
+      return state.userMap[id]?.display_name || id || "Unassigned";
+    }
+
+    function statusBadge(status) {
+      const label = STATUS_LABELS[status] || status;
+      return `<span class="badge badge-${escapeHtml(status)}">${escapeHtml(label)}</span>`;
+    }
+
+    function clearBanner() {
+      document.getElementById("banner-area").innerHTML = "";
+    }
+
+    function showSuccess(title, detail = "") {
+      document.getElementById("banner-area").innerHTML = `
+        <div class="alert alert-success">
+          <strong>${escapeHtml(title)}</strong>
+          ${detail ? `<div style="margin-top:4px">${detail}</div>` : ""}
+        </div>
+      `;
+    }
+
+    function showError(res) {
+      const d = res.data || {};
+      const listHtml = Array.isArray(d.errors) && d.errors.length
+        ? `<ul>${d.errors.map(e => `<li>${escapeHtml(e.message)}</li>`).join("")}</ul>`
+        : "";
+      const refHtml = res.reqId && res.reqId !== "-"
+        ? `<div class="ref-strip">
+             <span>Need help from Support? Share Reference #:</span>
+             <span class="ref-code">${escapeHtml(res.reqId)}</span>
+             <button type="button" class="btn btn-secondary btn-sm" onclick="copyText('${escapeHtml(res.reqId)}', this)">Copy</button>
+           </div>`
+        : "";
+      document.getElementById("banner-area").innerHTML = `
+        <div class="alert alert-error">
+          <strong>${escapeHtml(d.message || "We could not complete your request.")}</strong>
+          ${listHtml}
+          ${refHtml}
+        </div>
+      `;
+    }
+
+    function copyText(text, btn) {
+      navigator.clipboard?.writeText(text);
+      if (btn) {
+        const orig = btn.textContent;
+        btn.textContent = "Copied";
+        setTimeout(() => { btn.textContent = orig; }, 1400);
+      }
+    }
+
+    async function api(method, path, { body = null, headers = {}, auth = true } = {}) {
       const reqHeaders = { ...headers };
-      if (auth && state.token) {
-        reqHeaders["Authorization"] = `Bearer ${state.token}`;
-      }
-      if (body !== null) {
-        reqHeaders["Content-Type"] = "application/json";
-      }
+      if (auth && state.token) reqHeaders["Authorization"] = `Bearer ${state.token}`;
+      if (body !== null) reqHeaders["Content-Type"] = "application/json";
+
       const res = await fetch(path, {
         method,
         headers: reqHeaders,
         body: body !== null ? JSON.stringify(body) : undefined,
       });
       const reqId = res.headers.get("X-Request-ID") || "-";
-      state.lastRequestId = reqId;
       let data = null;
-      try {
-        data = await res.json();
-      } catch {
-        data = null;
-      }
-
-      document.getElementById("inspector-summary").textContent =
-        `${method} ${path}  →  ${res.status}  |  X-Request-ID: ${reqId}`;
-      document.getElementById("inspector-json").textContent = JSON.stringify(data, null, 2);
-
+      try { data = await res.json(); } catch { data = null; }
       return { ok: res.ok, status: res.status, reqId, data, headers: res.headers };
     }
 
-    function renderApiError(res) {
-      const d = res.data || {};
-      const errs = Array.isArray(d.errors) && d.errors.length
-        ? `<ul>${d.errors.map(e => `<li><code>${escapeHtml(e.field)}</code> — <strong>${escapeHtml(e.code)}</strong>: ${escapeHtml(e.message)}</li>`).join("")}</ul>`
-        : "";
-      const copyBtn = `<button class="btn btn-secondary btn-sm" style="margin-left:8px" onclick="navigator.clipboard.writeText('${escapeHtml(res.reqId)}')">Copy X-Request-ID</button>`;
-      showFeedback(
-        "error",
-        `${res.status} ${d.code || "ERROR"}: ${d.message || "Request failed"}`,
-        `<div class="mono">X-Request-ID: ${escapeHtml(res.reqId)} ${copyBtn}</div>${errs}`
-      );
-    }
-
+    // ---------- BOOTSTRAP & ACCOUNT SWITCHER ----------
     async function init() {
-      document.getElementById("f-dos").value = futureDate(21);
-      addProcRow("CPT", "72148", 1, false);
-      addProcRow("CPT", "97110", 12, false);
+      document.getElementById("f-dos").value = futureDate(14);
+      addProcRow("CPT", "72148", 1);
 
-      const res = await apiFetch("GET", "/api/v1/dev/users", { auth: false });
+      const res = await api("GET", "/api/v1/dev/users", { auth: false });
       if (!res.ok) {
-        showFeedback("error", "Could not load seeded dev users", "Make sure ENV=development is active.");
+        showError(res);
         return;
       }
       state.users = res.data;
       state.reviewers = res.data.filter(u => u.role === "reviewer");
-      renderPersonaButtons();
-      if (state.users.length) {
-        const defaultUser = state.users.find(u => u.user_id === "user-prov-maine") || state.users[0];
-        await selectPersona(defaultUser.user_id);
+      state.userMap = Object.fromEntries(res.data.map(u => [u.user_id, u]));
+
+      const select = document.getElementById("account-select");
+      const roleOrder = ["provider_office", "reviewer", "member", "admin"];
+      select.innerHTML = roleOrder.map(role => {
+        const group = state.users.filter(u => u.role === role);
+        if (!group.length) return "";
+        return `<optgroup label="${ROLE_LABELS[role]}">
+          ${group.map(u => `<option value="${escapeHtml(u.user_id)}">${escapeHtml(u.display_name)}</option>`).join("")}
+        </optgroup>`;
+      }).join("");
+
+      const defaultUser = state.users.find(u => u.user_id === "user-prov-maine") || state.users[0];
+      if (defaultUser) {
+        select.value = defaultUser.user_id;
+        await switchAccount(defaultUser.user_id);
       }
     }
 
-    function renderPersonaButtons() {
-      const box = document.getElementById("persona-buttons");
-      box.innerHTML = state.users.map(u => `
-        <button class="persona-btn ${state.activeUser?.user_id === u.user_id ? "active" : ""}"
-                onclick="selectPersona('${escapeHtml(u.user_id)}')">
-          <span class="role-dot dot-${escapeHtml(u.role)}"></span>
-          <span>${escapeHtml(u.display_name)}</span>
-          <span style="opacity:0.7;font-size:11px">(${escapeHtml(u.role)})</span>
-        </button>
-      `).join("");
-    }
-
-    async function selectPersona(userId) {
-      clearFeedback();
-      const res = await apiFetch("POST", "/api/v1/dev/tokens", {
+    async function switchAccount(userId) {
+      clearBanner();
+      closeHighUnitsModal();
+      const res = await api("POST", "/api/v1/dev/tokens", {
         body: { user_id: userId },
         auth: false,
       });
-      if (!res.ok) {
-        renderApiError(res);
-        return;
-      }
-      state.token = res.data.access_token;
-      state.activeUser = state.users.find(u => u.user_id === userId);
-      renderPersonaButtons();
+      if (!res.ok) { showError(res); return; }
 
-      const u = state.activeUser;
-      document.getElementById("active-user-banner").innerHTML =
-        `Active: <code>${escapeHtml(u.user_id)}</code> · Role: <code>${escapeHtml(u.role)}</code>` +
-        (u.practice_id ? ` · Practice: <code>${escapeHtml(u.practice_id)}</code>` : "");
+      state.token = res.data.access_token;
+      state.activeUser = state.userMap[userId];
 
       for (const role of ["provider_office", "reviewer", "member", "admin"]) {
-        document.getElementById(`view-${role}`).classList.toggle("hidden", u.role !== role);
+        document.getElementById(`portal-${role}`).classList.toggle("hidden", state.activeUser.role !== role);
       }
 
-      if (u.role === "provider_office") {
-        if (u.practice_id === "prac-hawaii") fillPreset("bob-valid");
-        else fillPreset("alice-valid");
-        await loadProviderData();
-      } else if (u.role === "reviewer") {
-        await loadReviewerData();
-      } else if (u.role === "member") {
-        await loadMemberData();
-      } else if (u.role === "admin") {
-        await loadAdminData();
+      if (state.activeUser.role === "provider_office") {
+        document.getElementById("provider-heading").textContent = state.activeUser.display_name;
+        await loadProviderPortal();
+      } else if (state.activeUser.role === "reviewer") {
+        document.getElementById("reviewer-heading").textContent = `Clinical Review — ${state.activeUser.display_name}`;
+        await loadReviewerPortal();
+      } else if (state.activeUser.role === "member") {
+        document.getElementById("member-heading").textContent = `Welcome, ${state.activeUser.display_name}`;
+        await loadMemberPortal();
+      } else if (state.activeUser.role === "admin") {
+        await loadAdminPortal();
       }
     }
 
-    // ---------- PROVIDER OFFICE ----------
-    function addProcRow(codeType = "CPT", code = "", units = 1, confirmHigh = false) {
+    // ==================== PROVIDER OFFICE ====================
+    function setProviderTab(tab) {
+      document.getElementById("ptab-requests").classList.toggle("active", tab === "requests");
+      document.getElementById("ptab-notifications").classList.toggle("active", tab === "notifications");
+      document.getElementById("provider-tab-requests").classList.toggle("hidden", tab !== "requests");
+      document.getElementById("provider-tab-notifications").classList.toggle("hidden", tab !== "notifications");
+    }
+
+    function addProcRow(codeType = "CPT", code = "", units = 1) {
       const container = document.getElementById("proc-rows");
       const row = document.createElement("div");
       row.className = "proc-row";
       row.innerHTML = `
-        <select class="p-type">
+        <select class="p-type" aria-label="Code Type">
           <option value="CPT" ${codeType === "CPT" ? "selected" : ""}>CPT</option>
           <option value="HCPCS" ${codeType === "HCPCS" ? "selected" : ""}>HCPCS</option>
         </select>
-        <input class="p-code" type="text" placeholder="72148" value="${escapeHtml(code)}" required />
-        <input class="p-units" type="number" value="${units}" required />
-        <label class="checkbox-inline"><input class="p-confirm" type="checkbox" ${confirmHigh ? "checked" : ""} /> confirm &gt;30</label>
-        <button type="button" class="btn btn-secondary btn-sm" onclick="this.parentElement.remove()">×</button>
+        <input class="p-code" type="text" placeholder="Code (e.g. 72148)" value="${escapeHtml(code)}" required />
+        <input class="p-units" type="number" min="1" placeholder="Units" value="${units}" required />
+        <button type="button" class="btn-icon" title="Remove procedure" onclick="removeProcRow(this)">&times;</button>
       `;
       container.appendChild(row);
     }
 
-    function fillPreset(name) {
-      const procBox = document.getElementById("proc-rows");
-      procBox.innerHTML = "";
-      document.getElementById("f-idem").value = "";
-      if (name === "alice-valid") {
-        document.getElementById("f-member").value = "mem-alice";
-        document.getElementById("f-dx").value = "M54.50";
-        document.getElementById("f-dos").value = futureDate(21);
-        document.getElementById("f-note").value = "Patient reports 8 weeks of lumbar radiculopathy.";
-        addProcRow("CPT", "72148", 1, false);
-        addProcRow("CPT", "97110", 12, false);
-      } else if (name === "carol-invalid") {
-        document.getElementById("f-member").value = "mem-carol";
-        document.getElementById("f-dx").value = "BAD-CODE";
-        document.getElementById("f-dos").value = futureDate(15);
-        document.getElementById("f-note").value = "Triggers terminated coverage + invalid ICD-10 + >30 units.";
-        addProcRow("CPT", "97110", 45, false);
-      } else if (name === "high-units") {
-        document.getElementById("f-member").value = "mem-alice";
-        document.getElementById("f-dx").value = "M54.50";
-        document.getElementById("f-dos").value = futureDate(14);
-        document.getElementById("f-note").value = "Testing >30 units typo confirmation.";
-        addProcRow("CPT", "97110", 45, false);
-      } else if (name === "bob-valid") {
-        document.getElementById("f-member").value = "mem-bob";
-        document.getElementById("f-dx").value = "E11.9";
-        document.getElementById("f-dos").value = futureDate(10);
-        document.getElementById("f-note").value = "Infusion therapy requested by Hawaii clinic.";
-        addProcRow("HCPCS", "J1745", 40, true);
-      }
+    function removeProcRow(btn) {
+      const rows = document.querySelectorAll("#proc-rows .proc-row");
+      if (rows.length <= 1) return;
+      btn.parentElement.remove();
     }
 
-    async function handleSubmitRequest(event) {
-      event.preventDefault();
-      clearFeedback();
-      const procedures = [...document.querySelectorAll("#proc-rows .proc-row")].map(row => ({
-        code_type: row.querySelector(".p-type").value,
-        code: row.querySelector(".p-code").value,
-        units: Number(row.querySelector(".p-units").value),
-        confirm_high_units: row.querySelector(".p-confirm").checked,
-      }));
-      const payload = {
-        member_id: document.getElementById("f-member").value.trim(),
+    function collectSubmissionPayload(confirmHighUnits = false) {
+      const procedures = [...document.querySelectorAll("#proc-rows .proc-row")].map(row => {
+        const units = Number(row.querySelector(".p-units").value);
+        return {
+          code_type: row.querySelector(".p-type").value,
+          code: row.querySelector(".p-code").value.trim(),
+          units,
+          confirm_high_units: confirmHighUnits && units > 30,
+        };
+      });
+      return {
+        member_id: document.getElementById("f-patient").value,
         diagnosis_code: document.getElementById("f-dx").value.trim(),
         date_of_service: document.getElementById("f-dos").value,
         procedures,
-        clinical_note: document.getElementById("f-note").value || null,
+        clinical_note: document.getElementById("f-note").value.trim() || null,
       };
-      const headers = {};
-      const idem = document.getElementById("f-idem").value.trim();
-      if (idem) headers["Idempotency-Key"] = idem;
+    }
 
-      const res = await apiFetch("POST", "/api/v1/provider/requests", { body: payload, headers });
+    async function handleProviderSubmit(event) {
+      event.preventDefault();
+      clearBanner();
+      const payload = collectSubmissionPayload(false);
+      // Automatic idempotency key per submit attempt so double-clicks never duplicate.
+      const idemKey = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()));
+      await submitPriorAuthPayload(payload, idemKey);
+    }
+
+    async function submitPriorAuthPayload(payload, idemKey) {
+      const res = await api("POST", "/api/v1/provider/requests", {
+        body: payload,
+        headers: { "Idempotency-Key": idemKey },
+      });
+
       if (!res.ok) {
-        renderApiError(res);
+        const errs = res.data?.errors || [];
+        const onlyHighUnits =
+          res.status === 422 &&
+          errs.length > 0 &&
+          errs.every(e => e.code === "HIGH_UNITS_CONFIRMATION_REQUIRED");
+
+        if (onlyHighUnits) {
+          openHighUnitsModal(payload, idemKey);
+          return;
+        }
+        showError(res);
         return;
       }
-      const replayed = res.headers.get("Idempotency-Replayed") === "true";
-      showFeedback(
-        "success",
-        replayed ? "Idempotent Replay (200 OK)" : "Prior Authorization Submitted (201 Created)",
-        `Request ID: <code class="mono">${escapeHtml(res.data.id)}</code> · X-Request-ID: <code class="mono">${escapeHtml(res.reqId)}</code>`
+
+      closeHighUnitsModal();
+      showSuccess(
+        "Prior authorization submitted",
+        `Request <strong>#${shortId(res.data.id)}</strong> has been added to the clinical review queue.`
       );
-      await loadProviderData();
+      document.getElementById("f-note").value = "";
+      await loadProviderPortal();
     }
 
-    async function loadProviderData() {
-      const [reqs, notes] = await Promise.all([
-        apiFetch("GET", "/api/v1/provider/requests"),
-        apiFetch("GET", "/api/v1/provider/notifications"),
+    function openHighUnitsModal(payload, idemKey) {
+      state.pendingHighUnitsPayload = payload;
+      state.pendingIdemKey = idemKey;
+      const flagged = payload.procedures.filter(p => p.units > 30);
+      document.getElementById("high-units-modal-list").innerHTML = flagged
+        .map(p => `<div><strong>${escapeHtml(p.code_type)} ${escapeHtml(p.code.toUpperCase())}</strong> — ${p.units} units</div>`)
+        .join("");
+      document.getElementById("high-units-modal").classList.remove("hidden");
+    }
+
+    function closeHighUnitsModal() {
+      state.pendingHighUnitsPayload = null;
+      state.pendingIdemKey = null;
+      document.getElementById("high-units-modal").classList.add("hidden");
+    }
+
+    async function confirmAndResubmitHighUnits() {
+      if (!state.pendingHighUnitsPayload) return;
+      const confirmedPayload = {
+        ...state.pendingHighUnitsPayload,
+        procedures: state.pendingHighUnitsPayload.procedures.map(p => ({
+          ...p,
+          confirm_high_units: p.units > 30,
+        })),
+      };
+      // Use a fresh idempotency key for the confirmed submission.
+      const idemKey = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()));
+      await submitPriorAuthPayload(confirmedPayload, idemKey);
+    }
+
+    async function loadProviderPortal() {
+      const [patients, reqs, notifs] = await Promise.all([
+        api("GET", "/api/v1/provider/patients"),
+        api("GET", "/api/v1/provider/requests"),
+        api("GET", "/api/v1/provider/notifications"),
       ]);
+
+      if (patients.ok) {
+        const sel = document.getElementById("f-patient");
+        const current = sel.value;
+        sel.innerHTML = patients.data
+          .map(p => `<option value="${escapeHtml(p.member_id)}">${escapeHtml(p.full_name)}</option>`)
+          .join("");
+        if (current && patients.data.some(p => p.member_id === current)) sel.value = current;
+      }
+
+      const patientNames = Object.fromEntries((patients.data || []).map(p => [p.member_id, p.full_name]));
+      const reqList = reqs.data || [];
+      document.getElementById("pcount-requests").textContent = reqList.length;
+
       const reqEl = document.getElementById("provider-requests-list");
-      if (!reqs.ok || !reqs.data.length) {
-        reqEl.innerHTML = `<p class="hint">No requests submitted by this practice yet.</p>`;
+      if (!reqList.length) {
+        reqEl.innerHTML = `<div class="empty-state">No requests submitted yet. Use the form on the left to submit your first authorization.</div>`;
       } else {
-        reqEl.innerHTML = reqs.data.map(r => `
-          <div class="req-item">
-            <div class="req-top">
-              <span class="mono">${escapeHtml(r.id)}</span>
-              <span class="badge badge-${escapeHtml(r.status)}">${escapeHtml(r.status)}</span>
+        reqEl.innerHTML = reqList.map(r => `
+          <div class="req-card">
+            <div class="req-card-top">
+              <div>
+                <div class="req-title">${escapeHtml(patientNames[r.member_id] || r.member_id)} · #${shortId(r.id)}</div>
+                <div class="req-meta">Diagnosis: <strong>${escapeHtml(r.diagnosis_code)}</strong> · Planned Date: <strong>${escapeHtml(r.date_of_service)}</strong></div>
+              </div>
+              ${statusBadge(r.status)}
             </div>
-            <div class="meta-line">Member: <strong>${escapeHtml(r.member_id)}</strong> · Dx: ${escapeHtml(r.diagnosis_code)} · DOS: ${escapeHtml(r.date_of_service)}</div>
-            ${r.clinical_note ? `<div class="meta-line">Note: ${escapeHtml(r.clinical_note)}</div>` : ""}
-            <ul class="proc-list">
+            ${r.clinical_note ? `<div class="note-box">${escapeHtml(r.clinical_note)}</div>` : ""}
+            <table class="proc-table">
               ${r.procedures.map(p => `
-                <li>
-                  <span><strong>${escapeHtml(p.code_type)} ${escapeHtml(p.code)}</strong> × ${p.units}</span>
-                  <span>
-                    <span class="badge badge-${escapeHtml(p.decision)}">${escapeHtml(p.decision)}</span>
-                    ${p.denial_reason ? `<span style="color:var(--red-text);margin-left:6px">${escapeHtml(p.denial_reason)}</span>` : ""}
-                  </span>
-                </li>
+                <tr>
+                  <td><strong>${escapeHtml(p.code_type)} ${escapeHtml(p.code)}</strong> · ${p.units} ${p.units === 1 ? "unit" : "units"}</td>
+                  <td>
+                    ${statusBadge(p.decision)}
+                    ${p.denial_reason ? `<span class="denial-text">Reason: ${escapeHtml(p.denial_reason)}</span>` : ""}
+                  </td>
+                </tr>
               `).join("")}
-            </ul>
+            </table>
           </div>
         `).join("");
       }
 
-      const noteEl = document.getElementById("provider-notifications-list");
-      if (!notes.ok || !notes.data.length) {
-        noteEl.innerHTML = `<p class="hint">No decision notifications yet. Decide a request as a Reviewer to trigger one.</p>`;
+      const notifList = notifs.data || [];
+      document.getElementById("pcount-notifs").textContent = notifList.length;
+      const notifEl = document.getElementById("provider-notifications-list");
+      if (!notifList.length) {
+        notifEl.innerHTML = `<div class="empty-state">You will be notified here as soon as a clinical reviewer decides a request.</div>`;
       } else {
-        noteEl.innerHTML = notes.data.map(n => `
-          <div class="req-item">
-            <div class="req-top">
-              <strong>${escapeHtml(n.event_type)}</strong>
-              <span class="badge badge-${escapeHtml(n.payload?.status || "pending")}">${escapeHtml(n.payload?.status || n.status)}</span>
+        notifEl.innerHTML = notifList.map(n => `
+          <div class="req-card">
+            <div class="req-card-top">
+              <div>
+                <div class="req-title">Decision Received for Request #${shortId(n.request_id)}</div>
+                <div class="req-meta">
+                  ${n.payload?.approved_count ?? 0} approved, ${n.payload?.denied_count ?? 0} denied · ${formatTime(n.created_at)}
+                </div>
+              </div>
+              ${statusBadge(n.payload?.status || "pending")}
             </div>
-            <div class="meta-line mono">Request: ${escapeHtml(n.request_id)} · Approved: ${n.payload?.approved_count ?? 0}, Denied: ${n.payload?.denied_count ?? 0}</div>
           </div>
         `).join("");
       }
     }
 
-    // ---------- REVIEWER ----------
-    async function loadReviewerData() {
+    // ==================== REVIEWER ====================
+    async function loadReviewerPortal() {
       const [queue, assigned] = await Promise.all([
-        apiFetch("GET", "/api/v1/reviewer/queue"),
-        apiFetch("GET", "/api/v1/reviewer/requests"),
+        api("GET", "/api/v1/reviewer/queue"),
+        api("GET", "/api/v1/reviewer/requests"),
       ]);
 
+      const qList = queue.data || [];
       const qEl = document.getElementById("reviewer-queue-list");
-      if (!queue.ok || !queue.data.length) {
-        qEl.innerHTML = `<p class="hint">No eligible unassigned requests in queue.</p>`;
+      if (!qList.length) {
+        qEl.innerHTML = `<div class="empty-state">No unassigned requests are waiting in your queue.</div>`;
       } else {
-        qEl.innerHTML = queue.data.map(item => `
-          <div class="req-item">
-            <div class="req-top">
-              <span class="mono">${escapeHtml(item.id)}</span>
-              <button class="btn btn-sm" onclick="claimSpecific('${escapeHtml(item.id)}')">Claim</button>
+        qEl.innerHTML = qList.map(item => `
+          <div class="req-card">
+            <div class="req-card-top">
+              <div>
+                <div class="req-title">Request #${shortId(item.id)}</div>
+                <div class="req-meta">
+                  Planned Date: <strong>${escapeHtml(item.date_of_service)}</strong> ·
+                  ${item.procedure_count} ${item.procedure_count === 1 ? "procedure" : "procedures"} ·
+                  Submitted ${formatTime(item.created_at)}
+                </div>
+              </div>
+              <button class="btn btn-sm" onclick="pickUpRequest('${escapeHtml(item.id)}')">Pick Up</button>
             </div>
-            <div class="meta-line">Practice: ${escapeHtml(item.practice_id)} · DOS: ${escapeHtml(item.date_of_service)} · Procedures: ${item.procedure_count}</div>
           </div>
         `).join("");
       }
 
+      const aList = assigned.data || [];
       const aEl = document.getElementById("reviewer-assigned-list");
-      if (!assigned.ok || !assigned.data.length) {
-        aEl.innerHTML = `<p class="hint">You have no assigned requests. Claim one from the queue.</p>`;
+      if (!aList.length) {
+        aEl.innerHTML = `<div class="empty-state">No cases assigned to you yet. Pick up a request from the queue to begin reviewing.</div>`;
       } else {
-        aEl.innerHTML = assigned.data.map(r => {
-          const isOpen = r.status === "in_review";
-          return `
-            <div class="req-item">
-              <div class="req-top">
-                <span class="mono">${escapeHtml(r.id)}</span>
-                <span class="badge badge-${escapeHtml(r.status)}">${escapeHtml(r.status)}</span>
-              </div>
-              <div class="meta-line">Member: <strong>${escapeHtml(r.member_id)}</strong> · Dx: ${escapeHtml(r.diagnosis_code)} · DOS: ${escapeHtml(r.date_of_service)}</div>
-              ${r.clinical_note ? `<div class="meta-line"><strong>Clinical Note:</strong> ${escapeHtml(r.clinical_note)}</div>` : ""}
-              <div id="dec-form-${escapeHtml(r.id)}">
-                ${r.procedures.map(p => isOpen ? `
-                  <div style="border-top:1px solid #e2e8f0;padding:8px 0;">
-                    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:6px;">
-                      <strong>${escapeHtml(p.code_type)} ${escapeHtml(p.code)} × ${p.units}</strong>
-                      <select class="dec-choice" data-proc="${escapeHtml(p.id)}" style="width:140px" onchange="toggleDenialInput(this)">
-                        <option value="approved">Approve</option>
-                        <option value="denied">Deny</option>
-                      </select>
-                    </div>
-                    <input class="dec-reason hidden" data-proc="${escapeHtml(p.id)}" type="text" placeholder="Required denial reason..." />
-                  </div>
-                ` : `
-                  <div style="border-top:1px solid #f1f5f9;padding:6px 0;font-size:13px;display:flex;justify-content:space-between;">
-                    <span><strong>${escapeHtml(p.code_type)} ${escapeHtml(p.code)}</strong> × ${p.units}</span>
-                    <span><span class="badge badge-${escapeHtml(p.decision)}">${escapeHtml(p.decision)}</span> ${p.denial_reason ? escapeHtml(p.denial_reason) : ""}</span>
-                  </div>
-                `).join("")}
-                ${isOpen ? `<button class="btn btn-sm" style="margin-top:8px" onclick="submitDecision('${escapeHtml(r.id)}')">Submit Final Decision</button>` : ""}
-              </div>
-            </div>
-          `;
-        }).join("");
+        aEl.innerHTML = aList.map(r => renderReviewerCase(r)).join("");
       }
     }
 
-    function toggleDenialInput(sel) {
-      const reasonInput = sel.parentElement.parentElement.querySelector(".dec-reason");
-      reasonInput.classList.toggle("hidden", sel.value !== "denied");
+    function renderReviewerCase(r) {
+      const isOpen = r.status === "in_review";
+      if (isOpen && !state.decisionDrafts[r.id]) {
+        state.decisionDrafts[r.id] = Object.fromEntries(
+          r.procedures.map(p => [p.id, { decision: "approved", denial_reason: "" }])
+        );
+      }
+
+      const procsHtml = isOpen
+        ? r.procedures.map(p => {
+            const draft = state.decisionDrafts[r.id][p.id];
+            const isDenied = draft.decision === "denied";
+            return `
+              <div class="decision-row">
+                <div class="decision-row-top">
+                  <div>
+                    <strong>${escapeHtml(p.code_type)} ${escapeHtml(p.code)}</strong>
+                    <span class="muted">· ${p.units} ${p.units === 1 ? "unit" : "units"}${p.high_units_confirmed ? " (high quantity confirmed)" : ""}</span>
+                  </div>
+                  <div class="decision-toggle">
+                    <button type="button" class="${!isDenied ? "sel-approve" : ""}" onclick="setProcDecision('${escapeHtml(r.id)}','${escapeHtml(p.id)}','approved')">Approve</button>
+                    <button type="button" class="${isDenied ? "sel-deny" : ""}" onclick="setProcDecision('${escapeHtml(r.id)}','${escapeHtml(p.id)}','denied')">Deny</button>
+                  </div>
+                </div>
+                <div class="${isDenied ? "" : "hidden"}" style="margin-top:8px">
+                  <input type="text" placeholder="Enter clinical reason for denial (required)..."
+                         value="${escapeHtml(draft.denial_reason)}"
+                         oninput="setProcReason('${escapeHtml(r.id)}','${escapeHtml(p.id)}',this.value)" />
+                </div>
+              </div>
+            `;
+          }).join("")
+        : `<table class="proc-table">
+            ${r.procedures.map(p => `
+              <tr>
+                <td><strong>${escapeHtml(p.code_type)} ${escapeHtml(p.code)}</strong> · ${p.units} ${p.units === 1 ? "unit" : "units"}</td>
+                <td>
+                  ${statusBadge(p.decision)}
+                  ${p.denial_reason ? `<span class="denial-text">${escapeHtml(p.denial_reason)}</span>` : ""}
+                </td>
+              </tr>
+            `).join("")}
+          </table>`;
+
+      return `
+        <div class="req-card" id="rev-case-${escapeHtml(r.id)}">
+          <div class="req-card-top">
+            <div>
+              <div class="req-title">Request #${shortId(r.id)}</div>
+              <div class="req-meta">Diagnosis: <strong>${escapeHtml(r.diagnosis_code)}</strong> · Planned Date: <strong>${escapeHtml(r.date_of_service)}</strong></div>
+            </div>
+            ${statusBadge(r.status)}
+          </div>
+          ${r.clinical_note ? `<div class="note-box"><strong>Clinical Note:</strong> ${escapeHtml(r.clinical_note)}</div>` : ""}
+          ${procsHtml}
+          ${isOpen ? `
+            <div style="margin-top:14px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+              <span class="muted">Decisions are final once submitted.</span>
+              <button class="btn" onclick="submitReviewerDecision('${escapeHtml(r.id)}')">Submit Final Decision</button>
+            </div>
+          ` : ""}
+        </div>
+      `;
     }
 
-    async function claimNextFromQueue() {
-      clearFeedback();
-      const res = await apiFetch("POST", "/api/v1/reviewer/queue/claim-next");
-      if (!res.ok) { renderApiError(res); return; }
-      showFeedback("success", "Claimed next request from queue", `Request <code class="mono">${escapeHtml(res.data.id)}</code> is now assigned to you.`);
-      await loadReviewerData();
+    function setProcDecision(reqId, procId, decision) {
+      if (!state.decisionDrafts[reqId]) return;
+      state.decisionDrafts[reqId][procId].decision = decision;
+      if (decision === "approved") state.decisionDrafts[reqId][procId].denial_reason = "";
+      loadReviewerPortal();
     }
 
-    async function claimSpecific(id) {
-      clearFeedback();
-      const res = await apiFetch("POST", `/api/v1/reviewer/requests/${encodeURIComponent(id)}/claim`);
-      if (!res.ok) { renderApiError(res); return; }
-      showFeedback("success", "Request claimed", `Request <code class="mono">${escapeHtml(res.data.id)}</code> is now assigned to you.`);
-      await loadReviewerData();
+    function setProcReason(reqId, procId, val) {
+      if (state.decisionDrafts[reqId]?.[procId]) {
+        state.decisionDrafts[reqId][procId].denial_reason = val;
+      }
     }
 
-    async function claimSpecificById() {
-      const id = document.getElementById("direct-claim-id").value.trim();
-      if (!id) return;
-      await claimSpecific(id);
+    async function pickUpNextRequest() {
+      clearBanner();
+      const res = await api("POST", "/api/v1/reviewer/queue/claim-next");
+      if (!res.ok) { showError(res); return; }
+      showSuccess(`Picked up Request #${shortId(res.data.id)}`, "It is now assigned to you under My Assigned Cases.");
+      await loadReviewerPortal();
     }
 
-    async function submitDecision(requestId) {
-      clearFeedback();
-      const container = document.getElementById(`dec-form-${requestId}`);
-      const decisions = [...container.querySelectorAll(".dec-choice")].map(sel => {
-        const procId = sel.dataset.proc;
-        const decision = sel.value;
-        const reasonEl = container.querySelector(`.dec-reason[data-proc="${procId}"]`);
-        const item = { procedure_id: procId, decision };
-        if (decision === "denied") item.denial_reason = reasonEl.value;
+    async function pickUpRequest(id) {
+      clearBanner();
+      const res = await api("POST", `/api/v1/reviewer/requests/${encodeURIComponent(id)}/claim`);
+      if (!res.ok) { showError(res); return; }
+      showSuccess(`Picked up Request #${shortId(res.data.id)}`, "It is now assigned to you under My Assigned Cases.");
+      await loadReviewerPortal();
+    }
+
+    async function submitReviewerDecision(reqId) {
+      clearBanner();
+      const draft = state.decisionDrafts[reqId] || {};
+      const decisions = Object.entries(draft).map(([procedure_id, val]) => {
+        const item = { procedure_id, decision: val.decision };
+        if (val.decision === "denied") item.denial_reason = val.denial_reason;
         return item;
       });
-      const res = await apiFetch("POST", `/api/v1/reviewer/requests/${encodeURIComponent(requestId)}/decision`, {
+      const res = await api("POST", `/api/v1/reviewer/requests/${encodeURIComponent(reqId)}/decision`, {
         body: { decisions },
       });
-      if (!res.ok) { renderApiError(res); return; }
-      showFeedback("success", `Final Decision Recorded (${res.data.status})`, `Audit event & provider office notification created atomically.`);
-      await loadReviewerData();
+      if (!res.ok) { showError(res); return; }
+      delete state.decisionDrafts[reqId];
+      showSuccess(
+        `Decision recorded (${STATUS_LABELS[res.data.status] || res.data.status})`,
+        "The submitting provider office has been notified and the decision is locked."
+      );
+      await loadReviewerPortal();
     }
 
-    // ---------- MEMBER ----------
-    async function loadMemberData() {
-      const res = await apiFetch("GET", "/api/v1/member/requests");
+    // ==================== MEMBER ====================
+    async function loadMemberPortal() {
+      const res = await api("GET", "/api/v1/member/requests");
+      const list = res.data || [];
       const el = document.getElementById("member-requests-list");
-      if (!res.ok || !res.data.length) {
-        el.innerHTML = `<p class="hint">No prior authorization requests for this member yet.</p>`;
+      if (!list.length) {
+        el.innerHTML = `<div class="card"><div class="empty-state">You have no prior authorization requests on file yet.</div></div>`;
         return;
       }
-      el.innerHTML = res.data.map((r, idx) => `
-        <div class="req-item">
-          <div class="req-top">
-            <span class="mono">${escapeHtml(r.id)}</span>
+      el.innerHTML = list.map(r => `
+        <div class="card">
+          <div class="req-card-top">
             <div>
-              <span class="badge badge-${escapeHtml(r.status)}">${escapeHtml(r.status)}</span>
-              <button class="btn btn-secondary btn-sm" style="margin-left:6px" onclick="document.getElementById('mem-raw-${idx}').classList.toggle('hidden')">Raw JSON</button>
+              <div class="req-title">Authorization #${shortId(r.id)}</div>
+              <div class="req-meta">
+                Planned Date of Service: <strong>${escapeHtml(r.date_of_service)}</strong>
+                ${r.decided_at ? ` · Decided ${formatTime(r.decided_at)}` : ""}
+              </div>
             </div>
+            ${statusBadge(r.status)}
           </div>
-          <div class="meta-line">Date of Service: <strong>${escapeHtml(r.date_of_service)}</strong></div>
-          <ul class="proc-list">
+          <table class="proc-table">
             ${r.procedures.map(p => `
-              <li>
-                <span><strong>${escapeHtml(p.code_type)} ${escapeHtml(p.code)}</strong> × ${p.units}</span>
-                <span class="badge badge-${escapeHtml(p.decision)}">${escapeHtml(p.decision)}</span>
-              </li>
+              <tr>
+                <td><strong>${escapeHtml(p.code_type)} ${escapeHtml(p.code)}</strong> · ${p.units} ${p.units === 1 ? "unit" : "units"}</td>
+                <td>${statusBadge(p.decision)}</td>
+              </tr>
             `).join("")}
-          </ul>
-          <pre id="mem-raw-${idx}" class="json-box hidden">${escapeHtml(JSON.stringify(r, null, 2))}</pre>
+          </table>
         </div>
       `).join("");
     }
 
-    // ---------- ADMIN ----------
-    async function loadAdminData() {
+    // ==================== OPERATIONS ADMIN ====================
+    function setAdminTab(tab) {
+      document.getElementById("atab-cases").classList.toggle("active", tab === "cases");
+      document.getElementById("atab-support").classList.toggle("active", tab === "support");
+      document.getElementById("admin-tab-cases").classList.toggle("hidden", tab !== "cases");
+      document.getElementById("admin-tab-support").classList.toggle("hidden", tab !== "support");
+    }
+
+    async function loadAdminPortal() {
+      const statusFilter = document.getElementById("admin-status-filter").value;
+      const reqPath = statusFilter
+        ? `/api/v1/admin/requests?status=${encodeURIComponent(statusFilter)}`
+        : "/api/v1/admin/requests";
+
       const [workload, reqs] = await Promise.all([
-        apiFetch("GET", "/api/v1/admin/reviewers/workload"),
-        apiFetch("GET", "/api/v1/admin/requests"),
+        api("GET", "/api/v1/admin/reviewers/workload"),
+        api("GET", reqPath),
       ]);
 
-      const wEl = document.getElementById("admin-workload");
-      wEl.innerHTML = (workload.data || []).map(w => `
-        <div class="workload-card">
-          <div class="workload-num">${w.open_request_count}</div>
-          <div><strong>${escapeHtml(w.display_name)}</strong></div>
-          <div class="mono" style="color:var(--muted)">${escapeHtml(w.reviewer_id)}</div>
+      const wList = workload.data || [];
+      document.getElementById("admin-kpis").innerHTML = wList.map(w => `
+        <div class="kpi-card">
+          <div class="kpi-label">Open Reviews · ${escapeHtml(w.display_name)}</div>
+          <div class="kpi-value">${w.open_request_count}</div>
+          <div class="kpi-sub">Active in-review requests</div>
         </div>
       `).join("");
 
-      const rEl = document.getElementById("admin-requests-list");
-      if (!reqs.ok || !reqs.data.length) {
-        rEl.innerHTML = `<p class="hint">No requests in system yet.</p>`;
-      } else {
-        const revOptions = state.reviewers.map(rev =>
-          `<option value="${escapeHtml(rev.user_id)}">${escapeHtml(rev.display_name)} (${escapeHtml(rev.user_id)})</option>`
-        ).join("");
+      const rList = reqs.data || [];
+      document.getElementById("acount-cases").textContent = rList.length;
 
-        rEl.innerHTML = reqs.data.map(r => {
-          const canReassign = r.status === "submitted" || r.status === "in_review";
+      const revOptions = state.reviewers
+        .map(rev => `<option value="${escapeHtml(rev.user_id)}">${escapeHtml(rev.display_name)}</option>`)
+        .join("");
+
+      const rEl = document.getElementById("admin-requests-list");
+      if (!rList.length) {
+        rEl.innerHTML = `<div class="empty-state">No prior authorization requests match the current filter.</div>`;
+      } else {
+        rEl.innerHTML = rList.map(r => {
+          const isOpen = r.status === "submitted" || r.status === "in_review";
           return `
-            <div class="req-item">
-              <div class="req-top">
-                <span class="mono">${escapeHtml(r.id)}</span>
-                <span class="badge badge-${escapeHtml(r.status)}">${escapeHtml(r.status)}</span>
+            <div class="req-card">
+              <div class="req-card-top">
+                <div>
+                  <div class="req-title">Request #${shortId(r.id)} · ${escapeHtml(r.diagnosis_code)}</div>
+                  <div class="req-meta">
+                    Planned Date: <strong>${escapeHtml(r.date_of_service)}</strong> ·
+                    Assigned: <strong>${escapeHtml(userName(r.assigned_reviewer_id))}</strong>
+                    ${r.decided_by ? ` · Decided by: <strong>${escapeHtml(userName(r.decided_by))}</strong>` : ""}
+                  </div>
+                </div>
+                ${statusBadge(r.status)}
               </div>
-              <div class="meta-line">
-                Member: <strong>${escapeHtml(r.member_id)}</strong> · Practice: ${escapeHtml(r.practice_id)} ·
-                Assigned: <code>${escapeHtml(r.assigned_reviewer_id || "unassigned")}</code>
-                ${r.decided_by ? ` · Decided by: <code>${escapeHtml(r.decided_by)}</code>` : ""}
-              </div>
-              <div class="btn-group">
-                <button class="btn btn-secondary btn-sm" onclick="loadAuditDetail('${escapeHtml(r.id)}')">View Audit Trail</button>
-                ${canReassign ? `
-                  <select id="reass-${escapeHtml(r.id)}" style="width:auto;padding:4px 8px;font-size:12px">${revOptions}</select>
-                  <button class="btn btn-sm" onclick="reassignRequest('${escapeHtml(r.id)}')">Reassign</button>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px">
+                <button class="btn btn-secondary btn-sm" onclick="loadAuditHistory('${escapeHtml(r.id)}')">View Audit History</button>
+                ${isOpen ? `
+                  <select id="reassign-${escapeHtml(r.id)}" style="width:auto;padding:5px 8px;font-size:12.5px">${revOptions}</select>
+                  <button class="btn btn-sm" onclick="handleReassign('${escapeHtml(r.id)}')">Reassign</button>
                 ` : ""}
               </div>
             </div>
@@ -936,61 +1309,72 @@
         }).join("");
       }
 
-      await loadSupportAttempts();
+      await loadSupportDesk();
     }
 
-    async function loadAuditDetail(requestId) {
-      const res = await apiFetch("GET", `/api/v1/admin/requests/${encodeURIComponent(requestId)}`);
-      if (!res.ok) { renderApiError(res); return; }
+    async function loadAuditHistory(requestId) {
+      const res = await api("GET", `/api/v1/admin/requests/${encodeURIComponent(requestId)}`);
+      if (!res.ok) { showError(res); return; }
       const d = res.data;
-      document.getElementById("admin-audit-detail").innerHTML = `
-        <div class="meta-line mono">Request: ${escapeHtml(d.id)} · Status: <strong>${escapeHtml(d.status)}</strong></div>
-        <ul class="proc-list">
+      document.getElementById("admin-audit-panel").innerHTML = `
+        <div class="req-card-top" style="margin-bottom:14px">
+          <div>
+            <div class="req-title">Request #${shortId(d.id)}</div>
+            <div class="req-meta">Submitted ${formatTime(d.created_at)}</div>
+          </div>
+          ${statusBadge(d.status)}
+        </div>
+        <ul class="timeline">
           ${d.audit_events.map(e => `
             <li>
-              <div>
-                <strong>${escapeHtml(e.event_type)}</strong>
-                <div class="mono" style="color:var(--muted)">actor: ${escapeHtml(e.actor_id)} (${escapeHtml(e.actor_role)})</div>
-                <div class="mono" style="color:var(--muted)">corr: ${escapeHtml(e.correlation_id)} · ${escapeHtml(JSON.stringify(e.metadata))}</div>
+              <div class="timeline-title">${escapeHtml(EVENT_LABELS[e.event_type] || e.event_type)}</div>
+              <div class="timeline-meta">
+                By <strong>${escapeHtml(userName(e.actor_id))}</strong> (${ROLE_LABELS[e.actor_role] || e.actor_role}) · ${formatTime(e.occurred_at)}
               </div>
-              <span class="mono" style="color:var(--muted)">${escapeHtml(e.occurred_at)}</span>
             </li>
           `).join("")}
         </ul>
       `;
     }
 
-    async function reassignRequest(requestId) {
-      clearFeedback();
-      const reviewerId = document.getElementById(`reass-${requestId}`).value;
-      const res = await apiFetch("POST", `/api/v1/admin/requests/${encodeURIComponent(requestId)}/reassign`, {
-        body: { reviewer_id: reviewerId, reason: "Operations queue balancing" },
+    async function handleReassign(requestId) {
+      clearBanner();
+      const targetId = document.getElementById(`reassign-${requestId}`).value;
+      const res = await api("POST", `/api/v1/admin/requests/${encodeURIComponent(requestId)}/reassign`, {
+        body: { reviewer_id: targetId, reason: "Workload balancing" },
       });
-      if (!res.ok) { renderApiError(res); return; }
-      showFeedback("success", "Request reassigned", `Assigned to <code>${escapeHtml(reviewerId)}</code> and logged in audit trail.`);
-      await loadAdminData();
-      await loadAuditDetail(requestId);
+      if (!res.ok) { showError(res); return; }
+      showSuccess("Request reassigned", `Assigned to <strong>${escapeHtml(userName(targetId))}</strong>.`);
+      await loadAdminPortal();
+      await loadAuditHistory(requestId);
     }
 
-    async function loadSupportAttempts() {
-      const q = document.getElementById("support-req-id").value.trim();
-      const path = q
-        ? `/api/v1/admin/support/submissions?request_id=${encodeURIComponent(q)}`
-        : `/api/v1/admin/support/submissions`;
-      const res = await apiFetch("GET", path);
+    async function loadSupportDesk() {
+      const ref = document.getElementById("support-search-input").value.trim();
+      const path = ref
+        ? `/api/v1/admin/support/submissions?request_id=${encodeURIComponent(ref)}`
+        : "/api/v1/admin/support/submissions";
+      const res = await api("GET", path);
+      const list = res.data || [];
+      document.getElementById("acount-support").textContent = list.length;
+
       const el = document.getElementById("admin-support-list");
-      if (!res.ok || !res.data.length) {
-        el.innerHTML = `<p class="hint">No matching submission attempts found.</p>`;
+      if (!list.length) {
+        el.innerHTML = `<div class="empty-state">No submission records found.</div>`;
         return;
       }
-      el.innerHTML = res.data.map(a => `
-        <div class="req-item">
-          <div class="req-top">
-            <span class="mono">${escapeHtml(a.correlation_id)}</span>
-            <span class="badge badge-${a.outcome === "accepted" ? "approved" : "denied"}">${escapeHtml(a.outcome)}</span>
+      el.innerHTML = list.map(a => `
+        <div class="req-card">
+          <div class="req-card-top">
+            <div>
+              <div class="req-title">Reference # <span class="ref-code">${escapeHtml(a.correlation_id)}</span></div>
+              <div class="req-meta">Submitted by <strong>${escapeHtml(userName(a.actor_id))}</strong> · ${formatTime(a.occurred_at)}</div>
+            </div>
+            ${statusBadge(a.outcome === "accepted" ? "approved" : "denied")}
           </div>
-          <div class="meta-line">Practice: <strong>${escapeHtml(a.practice_id)}</strong> · Actor: ${escapeHtml(a.actor_id)}</div>
-          ${a.error_codes.length ? `<div class="mono" style="color:var(--red-text)">Codes: ${escapeHtml(a.error_codes.join(", "))}</div>` : `<div class="mono" style="color:var(--green-text)">Prior Auth ID: ${escapeHtml(a.prior_auth_id)}</div>`}
+          ${a.error_codes.length
+            ? `<div style="font-size:13px;color:var(--red-text)"><strong>Rejection reasons:</strong> ${escapeHtml(a.error_codes.join(", "))}</div>`
+            : `<div class="muted">Accepted — Request #${shortId(a.prior_auth_id)}</div>`}
         </div>
       `).join("");
     }

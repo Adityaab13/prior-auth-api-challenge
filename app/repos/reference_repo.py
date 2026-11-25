@@ -90,3 +90,14 @@ def get_user_by_id(session: Session, user_id: str) -> UserRow | None:
 def list_all_users(session: Session) -> list[UserRow]:
     stmt = select(UserRow).order_by(UserRow.role.asc(), UserRow.id.asc())
     return list(session.scalars(stmt).all())
+
+
+def list_patients_for_practice(session: Session, practice_id: str) -> list[MemberRow]:
+    """Return members linked to `practice_id` (read-only lookup for provider portal)."""
+    stmt = (
+        select(MemberRow)
+        .join(PracticePatientRow, PracticePatientRow.member_id == MemberRow.id)
+        .where(PracticePatientRow.practice_id == practice_id)
+        .order_by(MemberRow.full_name.asc())
+    )
+    return list(session.scalars(stmt).all())

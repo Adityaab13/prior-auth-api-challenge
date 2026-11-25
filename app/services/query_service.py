@@ -17,6 +17,16 @@ from app.domain.types import (
 from app.repos import audit_repo, reference_repo, request_repo, support_repo
 
 
+def list_provider_patients(
+    session: Session,
+    *,
+    user: AuthenticatedUser,
+) -> list[tuple[str, str]]:
+    assert user.practice_id is not None
+    members = reference_repo.list_patients_for_practice(session, user.practice_id)
+    return [(m.id, m.full_name) for m in members]
+
+
 def list_provider_requests(
     session: Session,
     *,

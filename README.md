@@ -21,8 +21,8 @@ On startup, the API container automatically:
 3. Applies idempotent synthetic seed data (`python -m app.db.seed`).
 4. Starts the API at `http://localhost:8000`.
 
-### 2. Explore the Interactive Console & Swagger Docs
-- **Interactive Dev Explorer UI:** `http://localhost:8000/` *(development-only zero-build vanilla HTML/JS console with 1-click JWT persona switching across Provider, Reviewer, Member, and Admin)*
+### 2. Explore the Portal & Partner API Docs
+- **Prior Authorization Portal:** `http://localhost:8000/` *(development-only zero-build user-facing portal with account switching across Provider Office, Reviewer, Member, and Operations Admin, plus a confirmation popup when procedure units exceed 30)*
 - **Swagger UI:** `http://localhost:8000/docs`
 - **ReDoc:** `http://localhost:8000/redoc`
 - **OpenAPI JSON:** `http://localhost:8000/openapi.json`
